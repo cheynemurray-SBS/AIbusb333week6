@@ -1,0 +1,1357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BUSB 333 · Week 6 · AI in Information Systems</title>
+<style>
+:root{
+  --maroon:#5B0F16; --maroon-deep:#3B080D; --maroon-mid:#7A1A20;
+  --gold:#C6A44A; --gold-soft:#F1E6C4; --gold-ink:#7A6220;
+  --paper:#FBFAF8; --panel:#FFFFFF; --ink:#231F20; --muted:#5E5A57;
+  --stone:#AAABAF; --line:#E3DCCF;
+  --ok:#2E6B3F; --ok-bg:#E8F2EA; --bad:#9B2226; --bad-bg:#F8E8E7;
+  --serif: Cambria, "Hoefler Text", "Iowan Old Style", Georgia, serif;
+  --sans: Calibri, Carlito, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  color-scheme: light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--ink)}
+body{font-family:var(--sans);font-size:17px;line-height:1.55}
+h1,h2,h3,h4{font-family:var(--serif);color:var(--maroon);line-height:1.2;margin:0 0 .5em}
+h1{font-size:2.1rem} h2{font-size:1.65rem} h3{font-size:1.2rem} h4{font-size:1.05rem}
+p{margin:0 0 1em}
+a{color:var(--maroon-mid)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+
+/* masthead: the deck's three bars become module progress */
+.bars{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:14px 28px 0}
+.bar{height:8px;background:#E6E3DE;border-radius:1px;overflow:hidden}
+.bar span{display:block;height:100%;width:0;background:var(--maroon-deep);transition:width .6s ease}
+.bar:nth-child(2) span{background:var(--maroon)}
+.bar:nth-child(3) span{background:var(--maroon-mid)}
+.mast{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;padding:18px 28px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.wordmark{font-family:var(--serif);color:var(--maroon);font-size:1.35rem;line-height:1.1}
+.wordmark small{display:block;font-family:var(--sans);font-size:.78rem;letter-spacing:.18em;color:var(--ink)}
+.mast .meta{font-size:.92rem;color:var(--muted);text-align:right}
+.mast .meta strong{color:var(--ink)}
+.progress-note{font-size:.85rem;color:var(--muted)}
+
+/* layout */
+.shell{display:grid;grid-template-columns:250px minmax(0,1fr);max-width:1180px;margin:0 auto}
+nav.map{position:sticky;top:0;align-self:start;padding:24px 18px 24px 28px;max-height:100vh;overflow:auto}
+nav.map ol{list-style:none;margin:0;padding:0;counter-reset:none}
+nav.map li{margin:0}
+nav.map button{width:100%;text-align:left;background:none;border:0;padding:8px 10px;border-radius:6px;cursor:pointer;display:flex;gap:10px;align-items:baseline;font-size:.95rem;color:var(--ink)}
+nav.map button:hover{background:#F2EEE7}
+nav.map button[aria-current="page"]{background:var(--maroon);color:#fff}
+nav.map .dot{flex:0 0 11px;height:11px;border-radius:50%;border:2px solid var(--stone);transform:translateY(1px)}
+nav.map .done .dot{background:var(--gold);border-color:var(--gold)}
+nav.map button[aria-current="page"] .dot{border-color:#fff}
+nav.map .sep{margin:12px 10px;border-top:1px solid var(--line)}
+nav.map .assign-link{font-weight:700;color:var(--maroon)}
+nav.map button[aria-current="page"].assign-link{color:#fff}
+
+main{padding:28px 32px 64px;min-width:0}
+section.page{display:none;max-width:760px}
+section.page.active{display:block}
+.lede{font-size:1.15rem;color:var(--muted)}
+.kicker{font-size:.95rem;color:var(--gold-ink);margin-bottom:.35em;font-weight:700}
+
+.callout{background:var(--maroon-deep);color:#F4E7C3;font-family:var(--serif);font-style:italic;font-size:1.1rem;padding:16px 22px;border-radius:4px;margin:24px 0}
+.note{border-left:4px solid var(--gold);background:#FFFDF6;padding:12px 16px;margin:18px 0}
+.note p:last-child{margin:0}
+
+table.grid{width:100%;border-collapse:collapse;margin:14px 0 8px;font-size:.96rem}
+table.grid th{text-align:left;font-family:var(--serif);color:var(--maroon);font-weight:700;border-bottom:2px solid var(--maroon);padding:8px 10px}
+table.grid td{border-bottom:1px solid var(--line);padding:10px;vertical-align:top}
+table.grid td:first-child{font-family:var(--serif);color:var(--maroon);font-weight:700;white-space:nowrap}
+table.grid em{color:var(--maroon-mid)}
+.tablewrap{overflow-x:auto}
+
+.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:16px 0}
+.trio > div{background:var(--panel);border-top:4px solid var(--maroon);padding:14px 16px;border-radius:0 0 4px 4px;box-shadow:0 0 0 1px var(--line) inset}
+.trio h4{margin-bottom:.4em}
+.trio ul{margin:0;padding-left:1.1em}
+.trio li{margin-bottom:.35em}
+.watch{margin-top:10px;background:var(--gold-soft);padding:8px 10px;font-size:.92rem;color:var(--maroon-deep)}
+.watch b{display:block;font-size:.8rem;color:var(--gold-ink)}
+
+/* maturity ladder */
+.ladder{display:flex;flex-direction:column-reverse;gap:8px;margin:18px 0}
+.rung{display:grid;grid-template-columns:150px 1fr;background:var(--panel);box-shadow:0 0 0 1px var(--line) inset;border-radius:4px;overflow:hidden}
+.rung .lvl{background:var(--maroon);color:#fff;padding:12px 14px;font-family:var(--serif)}
+.rung .lvl small{display:block;font-family:var(--sans);color:var(--gold);font-size:.8rem}
+.rung .lvl strong{font-size:1.15rem}
+.rung .body{padding:10px 14px;font-size:.95rem}
+.rung .body .ex{color:var(--muted)}
+.rung .body .he{display:inline-block;margin-top:4px;font-size:.82rem;font-weight:700;color:var(--gold-ink)}
+.rung:nth-child(1){margin-right:18%}.rung:nth-child(2){margin-left:6%;margin-right:12%}
+.rung:nth-child(3){margin-left:12%;margin-right:6%}.rung:nth-child(4){margin-left:18%}
+.rung:nth-child(2) .lvl{background:var(--maroon-mid)}
+.rung:nth-child(3) .lvl{background:var(--maroon-deep)}
+.rung:nth-child(4) .lvl{background:#2C2320}
+
+.phases{counter-reset:ph;display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:16px 0}
+.phases > div{background:var(--panel);box-shadow:0 0 0 1px var(--line) inset;padding:14px 16px;position:relative}
+.phases > div::before{counter-increment:ph;content:"Phase " counter(ph);display:block;font-size:.82rem;font-weight:700;color:var(--gold-ink);margin-bottom:2px}
+.phases ul{margin:.3em 0 0;padding-left:1.1em}
+
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:14px 0}
+.stats div{background:var(--maroon);color:#fff;padding:14px}
+.stats strong{display:block;font-family:var(--serif);font-size:1.6rem}
+.stats span{font-size:.9rem;color:#EBD9A6}
+
+ol.steps{padding-left:1.3em} ol.steps li{margin-bottom:.5em}
+
+/* knowledge checks */
+.kc{margin:34px 0 10px;border:2px solid var(--maroon);border-radius:6px;background:var(--panel)}
+.kc-head{background:var(--maroon);color:#fff;padding:12px 18px;display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.kc-head h3{color:#fff;margin:0;font-size:1.15rem}
+.kc-head span{font-size:.88rem;color:#EBD9A6}
+.kc-body{padding:6px 18px 18px}
+.q{border:0;border-bottom:1px solid var(--line);margin:0;padding:16px 0}
+.q legend{font-weight:700;padding:0;margin-bottom:8px;float:left;width:100%}
+.q legend + *{clear:both}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:6px 8px;border-radius:4px;cursor:pointer}
+.opt:hover{background:#F6F2EA}
+.opt input{margin-top:5px;accent-color:var(--maroon)}
+.mrow{display:grid;grid-template-columns:1fr 230px;gap:12px;align-items:center;padding:6px 0;border-top:1px dashed var(--line)}
+.mrow:first-of-type{border-top:0}
+.mrow select{width:100%;padding:6px 8px;border:1px solid #CFC7B8;border-radius:4px;background:#fff}
+.mrow.right select{border-color:var(--ok);background:var(--ok-bg)}
+.mrow.wrong select{border-color:var(--bad);background:var(--bad-bg)}
+.fb{display:none;margin-top:10px;padding:10px 12px;border-radius:4px;font-size:.95rem}
+.fb.show{display:block}
+.fb.right{background:var(--ok-bg);color:#1E4A2A}
+.fb.wrong{background:var(--bad-bg);color:#6E1418}
+.kc-actions{display:flex;gap:12px;align-items:center;margin-top:16px;flex-wrap:wrap}
+.kc-score{font-weight:700;color:var(--maroon)}
+
+.btn{background:var(--maroon);color:#fff;border:0;padding:10px 18px;border-radius:4px;cursor:pointer;font-weight:700}
+.btn:hover{background:var(--maroon-deep)}
+.btn.ghost{background:transparent;color:var(--maroon);box-shadow:0 0 0 2px var(--maroon) inset}
+.btn.ghost:hover{background:#F6EFE9}
+.btn.gold{background:var(--gold);color:var(--maroon-deep)}
+.btn.gold:hover{background:#B8963D}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:36px;padding-top:18px;border-top:1px solid var(--line)}
+
+/* assignment */
+.case{background:var(--panel);box-shadow:0 0 0 1px var(--line) inset;padding:18px 20px;margin:16px 0}
+.case h4{margin-top:12px}
+.case ul{margin:.2em 0 .6em;padding-left:1.2em}
+.exhibit{font-size:.95rem}
+.part{margin:30px 0;padding-top:6px;border-top:3px solid var(--maroon)}
+.part h3{margin-top:12px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.part h3 small{font-family:var(--sans);font-size:.9rem;color:var(--gold-ink);font-weight:700}
+.field{margin:14px 0}
+.field label,.field .lab{display:block;font-weight:700;margin-bottom:4px}
+.field .hint{display:block;font-weight:400;font-size:.9rem;color:var(--muted)}
+.field input[type=text],.field input[type=number],.field select,.field textarea{width:100%;padding:9px 10px;border:1px solid #CFC7B8;border-radius:4px;background:#fff}
+.field textarea{min-height:96px;resize:vertical}
+.field.invalid input,.field.invalid textarea,.field.invalid select,.field.invalid .choices{box-shadow:0 0 0 2px var(--bad)}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:4px 14px;padding:4px;border-radius:4px}
+.choices.one{grid-template-columns:1fr}
+.choices label{font-weight:400;display:flex;gap:8px;align-items:flex-start;margin:0;padding:4px 2px}
+.choices input{margin-top:5px;accent-color:var(--maroon)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+
+.calc{background:#FFFDF6;border:1px solid var(--gold);padding:14px 16px;margin:14px 0}
+.calc-out{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
+.calc-out div{background:#fff;border:1px solid var(--line);padding:8px 10px}
+.calc-out strong{display:block;font-family:var(--serif);font-size:1.25rem;color:var(--maroon)}
+.calc-out span{font-size:.85rem;color:var(--muted)}
+
+/* the $4M budget meter */
+.budget{margin:18px 0;padding:16px;background:var(--maroon-deep);color:#fff;border-radius:4px}
+.budget-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.budget-top strong{font-family:var(--serif);font-size:1.6rem;color:var(--gold)}
+.meter{position:relative;height:30px;background:#5A2A2E;margin:12px 0 8px;display:flex;overflow:hidden;border-radius:2px}
+.meter span{height:100%;transition:width .35s ease;display:flex;align-items:center;justify-content:center;font-size:.8rem;color:var(--maroon-deep);font-weight:700;overflow:hidden;white-space:nowrap}
+.meter .y1{background:#F1E6C4}.meter .y2{background:#D9BE72}.meter .y3{background:var(--gold)}
+.meter.over{box-shadow:0 0 0 3px #E86A6A}
+.budget-msg{font-size:.95rem;color:#F1E6C4}
+.wc{font-size:.88rem;color:var(--muted);margin-top:4px}
+.wc.good{color:var(--ok)} .wc.warn{color:var(--bad)}
+
+.rubric td:last-child,.rubric th:last-child{text-align:right;white-space:nowrap}
+.missing{background:var(--bad-bg);color:#6E1418;padding:12px 16px;border-radius:4px;margin:14px 0}
+.missing ul{margin:.3em 0 0;padding-left:1.2em}
+#preview{display:none;background:#fff;box-shadow:0 0 0 1px var(--line) inset;padding:26px 30px;margin:20px 0}
+#preview.show{display:block}
+#preview h2{border-bottom:2px solid var(--maroon);padding-bottom:6px}
+#preview h3{margin-top:18px}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:4px;font-size:.92rem;opacity:0;pointer-events:none;transition:opacity .25s}
+.toast.show{opacity:1}
+
+/* ---------- try-it interactives ---------- */
+.tryit{margin:30px 0;background:#fff;border:1px solid var(--line);border-left:6px solid var(--gold)}
+.tryit-head{padding:16px 20px 4px}
+.tryit-head h3{margin:0 0 .3em}
+.tryit-head p{margin:0;color:var(--muted);font-size:.96rem}
+.tryit-body{padding:10px 20px 20px}
+.tryit svg{width:100%;height:auto;display:block;background:#FCFBF8;border:1px solid var(--line)}
+.ctrl{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:12px 0}
+.ctrl label{font-weight:700}
+.ctrl input[type=range]{flex:1;min-width:180px;accent-color:var(--maroon)}
+.ctrl input[type=number]{width:120px;padding:6px 8px;border:1px solid #CFC7B8;border-radius:4px}
+.seg{display:inline-flex;flex-wrap:wrap;gap:6px}
+.seg button{background:#fff;border:2px solid var(--maroon);border-radius:4px;padding:6px 12px;cursor:pointer;color:var(--maroon);font-weight:700}
+.seg button[aria-pressed="true"]{background:var(--maroon);color:#fff}
+.seg button:disabled{opacity:.45;cursor:not-allowed}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin:12px 0}
+.kpis div{background:var(--paper);border:1px solid var(--line);padding:8px 10px}
+.kpis strong{display:block;font-family:var(--serif);font-size:1.3rem;color:var(--maroon)}
+.kpis span{font-size:.84rem;color:var(--muted)}
+.kpis .bad strong{color:var(--bad)} .kpis .good strong{color:var(--ok)}
+.insight{background:var(--gold-soft);padding:10px 14px;font-size:.96rem;color:var(--maroon-deep);margin-top:10px}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.86rem;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.steplist{list-style:none;padding:0;margin:8px 0}
+.steplist li{display:grid;grid-template-columns:auto 1fr auto auto;gap:12px;align-items:center;padding:8px 6px;border-bottom:1px solid var(--line)}
+.steplist li.off .nm{text-decoration:line-through;color:var(--muted)}
+.steplist .tag{font-size:.8rem;font-weight:700;padding:2px 8px;border-radius:10px;visibility:hidden}
+.steplist.revealed .tag{visibility:visible}
+.tag.v{background:var(--ok-bg);color:var(--ok)} .tag.n{background:var(--bad-bg);color:var(--bad)}
+.steplist input{accent-color:var(--maroon);width:18px;height:18px}
+.cmp{width:100%;border-collapse:collapse;font-size:.94rem;margin-top:10px}
+.cmp th,.cmp td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right}
+.cmp th:first-child,.cmp td:first-child{text-align:left}
+.cmp tr.sel td{background:#FBF4E2;font-weight:700}
+.rbars{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;align-items:end;height:190px;position:relative;margin:14px 0 4px;padding:0 6px;border-bottom:2px solid var(--ink)}
+.rbars .rb{background:var(--maroon);transition:height .3s ease;position:relative}
+.rbars .rb.weak{background:var(--bad)}
+.rbars .waterline{position:absolute;left:0;right:0;border-top:3px dashed var(--gold);transition:bottom .3s ease}
+.rbars .waterline span{position:absolute;right:4px;top:-22px;font-size:.8rem;font-weight:700;color:var(--gold-ink);background:#fff;padding:0 4px}
+.rlabels{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;text-align:center;font-size:.9rem;font-weight:700;color:var(--maroon)}
+.hbar{display:grid;grid-template-columns:110px 1fr 70px;gap:10px;align-items:center;margin:8px 0;font-size:.94rem}
+.hbar .track{background:#EEE9E1;height:22px;position:relative}
+.hbar .fill{height:100%;background:var(--maroon);transition:width .3s ease}
+.hbar .fill.b{background:var(--gold)}
+.verdict{font-family:var(--serif);font-size:1.15rem;padding:12px 14px;border-radius:4px;margin-top:12px}
+.verdict.ok{background:var(--ok-bg);color:#1E4A2A}.verdict.mid{background:var(--gold-soft);color:var(--maroon-deep)}.verdict.no{background:var(--bad-bg);color:#6E1418}
+.vq{margin:10px 0}.vq label{display:block;font-weight:700;margin-bottom:4px}
+.vq select{width:100%;padding:7px 8px;border:1px solid #CFC7B8;border-radius:4px;background:#fff}
+.stop{cursor:pointer}
+.stop:focus-visible circle{stroke:var(--gold);stroke-width:4}
+@media (max-width:880px){.steplist li{grid-template-columns:auto 1fr}.steplist .tag,.steplist .d{grid-column:2}.hbar{grid-template-columns:80px 1fr 56px}}
+
+@media (max-width:880px){
+  .shell{grid-template-columns:1fr}
+  nav.map{position:static;max-height:none;padding:12px 16px;border-bottom:1px solid var(--line)}
+  nav.map ol{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}
+  nav.map li{flex:0 0 auto}
+  nav.map button{white-space:nowrap}
+  nav.map .sep{display:none}
+  main{padding:22px 18px 56px}
+  .trio,.phases,.stats,.calc-out,.row3{grid-template-columns:1fr}
+  .row2,.choices{grid-template-columns:1fr}
+  .mrow{grid-template-columns:1fr}
+  .rung{grid-template-columns:110px 1fr;margin-left:0!important;margin-right:0!important}
+  .bars,.mast{padding-left:16px;padding-right:16px}
+  .mast .meta{text-align:left}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media print{
+  body *{visibility:hidden}
+  #preview,#preview *{visibility:visible}
+  #preview{position:absolute;left:0;top:0;box-shadow:none;padding:0;margin:0;display:block}
+}
+</style>
+</head>
+<body>
+
+<div class="bars" aria-hidden="true"><div class="bar"><span></span></div><div class="bar"><span></span></div><div class="bar"><span></span></div></div>
+<header class="mast">
+  <div class="wordmark"><small>UNIVERSITY OF</small>Redlands</div>
+  <div class="meta"><strong>BUSB 333 Business Information Systems</strong><br>Week 6 · AI in Information Systems<br><span class="progress-note" id="progressNote">0 of 10 sections complete</span></div>
+</header>
+
+<div class="shell">
+<nav class="map" aria-label="Module sections"><ol id="navList"></ol></nav>
+<main id="main" tabindex="-1">
+
+<!-- ============ START ============ -->
+<section class="page" id="start" data-title="Start here">
+  <p class="kicker">Week 6 asynchronous module</p>
+  <h1>AI in Information Systems</h1>
+  <p class="lede">AI isn't a separate system bolted onto the organization. It's speeding up every part of the information systems framework you've studied so far, from how data is processed to how leaders decide. This week you'll see where that's happening, how organizations climb toward it responsibly, and then you'll step into a CIO's shoes and build a roadmap.</p>
+
+  <h3>By the end of this module you'll be able to</h3>
+  <ul>
+    <li>Identify the five areas where AI is changing information systems and the governance question each one raises.</li>
+    <li>Place an organization on the four-level AI maturity model using evidence, and explain which decisions should stay with people.</li>
+    <li>Lay out a phased implementation plan that moves technical, organizational, and governance readiness forward together.</li>
+    <li>Build an ROI case for an AI investment in operations and defend it to a board.</li>
+    <li>Ask the right questions of any AI vendor before the feature reaches your users.</li>
+  </ul>
+
+  <h3>How this module works</h3>
+  <p>There are eight short lessons. Each ends with a knowledge check: it's practice, not graded, and you can retry as often as you like. Use the checks to prepare for Exam 2. The module closes with the graded assignment, <strong>The Hospital CIO</strong>, which turns the in-class breakout into a full three-year roadmap (100 points).</p>
+  <p>Your progress and answers save automatically in this browser. Plan on about an hour for the lessons and 90 minutes for the assignment.</p>
+
+  <div class="note">
+    <p><strong>This week</strong></p>
+    <p>Weekly assignment: Dashboard (see Canvas). Exam 2 is Thursday, October 15, and there is no class meeting that day. For final projects, review the Brief Expectations and your Teams group landing page.</p>
+  </div>
+
+  <div class="pager"><span></span><button class="btn" data-next>Start lesson 1</button></div>
+</section>
+
+<!-- ============ LESSON 1 ============ -->
+<section class="page" id="l1" data-title="1 · The AI–IS convergence" data-kc="kc1">
+  <p class="kicker">Lesson 1</p>
+  <h2>The AI–information systems convergence</h2>
+  <p>Think back to the IS framework: data comes in, gets processed, supports decisions, reaches users through interfaces, and has to be kept running. AI now touches every one of those stages at once. Five areas carry most of the change.</p>
+
+  <div class="tablewrap">
+  <table class="grid">
+    <thead><tr><th>Area</th><th>What AI does</th><th>On a university campus</th><th>The question it raises</th></tr></thead>
+    <tbody>
+      <tr><td>Data processing</td><td>Ingests, cleans, classifies, and prepares data at a scale that used to take whole teams.</td><td>Student, course, and enrollment data sync between the SIS and Canvas every term.</td><td><em>Is the source data trustworthy?</em></td></tr>
+      <tr><td>Decision making</td><td>Surfaces patterns and speeds decisions, from credit scoring to clinical diagnosis.</td><td>Early-alert models flag students who may not persist so advisors reach out sooner.</td><td><em>Who acts on the flag, and is it fair?</em></td></tr>
+      <tr><td>User interaction</td><td>Natural language, chatbots, and voice replace menus and form-filling.</td><td>A virtual help-desk agent answers password, Wi-Fi, and Canvas questions at 2 a.m.</td><td><em>When does it hand off to a human?</em></td></tr>
+      <tr><td>System maintenance</td><td>Predictive maintenance, anomaly detection, and self-healing cut downtime.</td><td>AV and network monitoring flag a failing projector before the 8 a.m. class.</td><td><em>Who gets the alert, and who's on call?</em></td></tr>
+      <tr><td>Business intelligence</td><td>BI shifts from what happened to what will happen, and what to do next.</td><td>Enrollment and retention dashboards forecast next term's sections and housing.</td><td><em>Does leadership trust it enough to act?</em></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>Look at the last column. None of those questions is about which algorithm to use. They're about whether the data is good, who is responsible, where the machine hands off to a person, and whether people will trust the output. That pattern will repeat all week.</p>
+  <div class="tryit" id="lab-alert"></div>
+  <div class="callout">The hard questions are about data, accountability, handoffs, and trust, not algorithms.</div>
+
+  <div data-kc-slot="kc1"></div>
+  <div class="pager"><button class="btn ghost" data-prev>Back</button><button class="btn" data-next>Next: AI-driven operations</button></div>
+</section>
+
+<!-- ============ LESSON 2 ============ -->
+<section class="page" id="l2" data-title="2 · AI-driven operations" data-kc="kc2">
+  <p class="kicker">Lesson 2</p>
+  <h2>AI-driven business operations</h2>
+  <p>Operations is where most organizations see AI's first real returns, because the work is repetitive, measurable, and expensive. Three categories cover most of it.</p>
+  <div class="trio">
+    <div><h4>Process automation &amp; optimization</h4><ul><li>RPA handles data entry, invoices, and compliance reporting.</li><li>AI workflows route exceptions and approvals.</li><li>Process mining finds bottlenecks in real time instead of in a quarterly review.</li></ul></div>
+    <div><h4>Intelligent resource management</h4><ul><li>Staffing is scheduled against predicted demand.</li><li>Cloud compute and storage are allocated automatically.</li><li>Smart-building energy systems cut costs 15–30%.</li></ul></div>
+    <div><h4>Supply chain intelligence</h4><ul><li>Demand forecasting reduces inventory and stockouts at the same time.</li><li>Supplier risk monitoring flags disruptions early.</li><li>Route optimization (UPS ORION) saves millions of miles.</li></ul></div>
+  </div>
+  <p>A warning comes with the first category. If a purchase approval currently passes through seven signatures and three of them add nothing, automating it just produces bad approvals faster. Map the process, remove the waste, then automate what's left. Process mining helps here because it shows you how work actually flows, not how the policy manual says it flows.</p>
+  <div class="tryit" id="lab-chain"></div>
+  <div class="callout">Automate the paperwork around a decision, and fix a process before you automate it.</div>
+
+  <div data-kc-slot="kc2"></div>
+  <div class="pager"><button class="btn ghost" data-prev>Back</button><button class="btn" data-next>Next: the maturity model</button></div>
+</section>
+
+<!-- ============ LESSON 3 ============ -->
+<section class="page" id="l3" data-title="3 · The AI maturity model" data-kc="kc3">
+  <p class="kicker">Lesson 3</p>
+  <h2>Implementation frameworks: the AI maturity model</h2>
+  <p>Organizations don't jump from spreadsheets to self-driving operations. They climb, one level at a time, and each level needs the one below it to be solid. Most organizations today are at Level 1 or 2.</p>
+
+  <div class="ladder" aria-label="Maturity ladder, Level 1 at the bottom">
+    <div class="rung"><div class="lvl"><small>Level 1</small><strong>Reactive</strong></div><div class="body">Follows rules humans wrote. Flags exceptions and runs scripted responses; nothing learns.<br><span class="ex">Spam filters, fraud alerts, rule-based chatbots</span><br><span class="he">Higher ed: everywhere (phishing filters, "missing assignment" alerts)</span></div></div>
+    <div class="rung"><div class="lvl"><small>Level 2</small><strong>Predictive</strong></div><div class="body">Learns from historical data to forecast what's coming, so the organization acts before problems occur.<br><span class="ex">Demand forecasting, predictive maintenance, churn</span><br><span class="he">Higher ed: investing now (enrollment forecasting, retention early-alert)</span></div></div>
+    <div class="rung"><div class="lvl"><small>Level 3</small><strong>Adaptive</strong></div><div class="body">Adjusts behavior in real time as conditions change, optimizing continuously against goals.<br><span class="ex">Dynamic pricing, personalization, autonomous routing</span><br><span class="he">Higher ed: selected courses (adaptive courseware)</span></div></div>
+    <div class="rung"><div class="lvl"><small>Level 4</small><strong>Autonomous</strong></div><div class="body">Makes and executes decisions within boundaries humans set; AI handles execution end to end.<br><span class="ex">Self-driving vehicles, algorithmic trading, autonomous plants</span><br><span class="he">Higher ed: rare, by design (high-stakes student decisions without human review)</span></div></div>
+  </div>
+
+  <h3>Human in the loop</h3>
+  <p>The goal isn't Level 4 everywhere. It's the right level for each decision. On a campus, grades, admissions, financial aid, and conduct decisions stay with people. Those decisions must be explainable, appealable, and owned by someone accountable. Regulators agree: the EU AI Act (2024) classifies AI used for admissions and for evaluating students as high-risk.</p>
+  <p>The same logic applies in any industry. A hospital can let AI reorder gauze automatically. It should not let AI discharge a patient on its own.</p>
+  <div class="tryit" id="lab-ladder"></div>
+  <div class="callout">Not Level 4 everywhere: the right level for each decision.</div>
+
+  <div data-kc-slot="kc3"></div>
+  <div class="pager"><button class="btn ghost" data-prev>Back</button><button class="btn" data-next>Next: strategy and governance</button></div>
+</section>
+
+<!-- ============ LESSON 4 ============ -->
+<section class="page" id="l4" data-title="4 · Strategy &amp; governance" data-kc="kc4">
+  <p class="kicker">Lesson 4</p>
+  <h2>Strategic implementation and governance</h2>
+  <p>A maturity model tells you where you are. A strategy tells you how to move. The pattern below works because it builds foundations before it scales.</p>
+  <div class="phases">
+    <div><h4>Foundation building</h4><ul><li>Data infrastructure and governance</li><li>AI literacy across the organization</li><li>High-value pilot use cases</li><li>Baseline metrics</li></ul></div>
+    <div><h4>Scale &amp; integrate</h4><ul><li>Pilots into production</li><li>AI inside existing IS workflows</li><li>Cross-functional data sharing</li><li>Internal AI ops capability</li></ul></div>
+    <div><h4>Innovation &amp; transformation</h4><ul><li>AI-native products and services</li><li>Autonomous process ownership</li><li>Competitive differentiation</li><li>Continuous experimentation</li></ul></div>
+  </div>
+  <p>Baseline metrics deserve attention. If you don't measure overtime, error rates, or cycle time before the pilot, you can't prove the pilot worked, and the board won't fund Phase 2.</p>
+
+  <h3>Three success factors that have to move together</h3>
+  <div class="tablewrap"><table class="grid">
+    <tbody>
+      <tr><td>Technical</td><td>Clean, accessible data; scalable cloud or on-prem infrastructure; MLOps to manage the model lifecycle.</td></tr>
+      <tr><td>Organizational</td><td>An executive sponsor; a cross-functional steering committee; upskilling and change management.</td></tr>
+      <tr><td>Governance &amp; ethics</td><td>Bias audits; explainability matched to the use case; privacy compliance (GDPR, CCPA, and FERPA on campus; HIPAA in healthcare).</td></tr>
+    </tbody>
+  </table></div>
+  <p>A strong data platform with no sponsor stalls. A sponsor with no governance creates risk. Readiness has to advance on all three fronts.</p>
+
+  <h3>What governance looks like on a campus</h3>
+  <div class="tablewrap"><table class="grid">
+    <tbody>
+      <tr><td>Approved tools</td><td>Enterprise licenses protect university data. Free consumer tools may train on whatever you type into them.</td></tr>
+      <tr><td>Data classification</td><td>Clear rules for which data goes into which tool. FERPA-protected records never go into unapproved tools.</td></tr>
+      <tr><td>Vendor review</td><td>Security, privacy, accessibility, and data-use terms reviewed before purchase and again at renewal.</td></tr>
+      <tr><td>Teaching &amp; integrity</td><td>Faculty set course AI policies. Detectors can't stand alone, so assessment design matters more.</td></tr>
+      <tr><td>AI literacy</td><td>Faculty workshops and student spaces to learn and experiment with AI safely.</td></tr>
+      <tr><td>Accountability</td><td>Every AI system has a named owner, and every affected person can question its output.</td></tr>
+    </tbody>
+  </table></div>
+  <div class="tryit" id="lab-ready"></div>
+  <div class="callout">Make the safe path the easy path.</div>
+
+  <div data-kc-slot="kc4"></div>
+  <div class="pager"><button class="btn ghost" data-prev>Back</button><button class="btn" data-next>Next: where to start</button></div>
+</section>
+
+<!-- ============ LESSON 5 ============ -->
+<section class="page" id="l5" data-title="5 · Where to start" data-kc="kc5">
+  <p class="kicker">Lesson 5</p>
+  <h2>Operational efficiency: the best starting points</h2>
+  <p>Customer relationships, HR, and finance share two traits that make them good first targets: lots of historical data and clear metrics for success. You can tell quickly whether the model is helping.</p>
+  <div class="trio">
+    <div><h4>Customer relationships</h4><ul><li>Predictive lead scoring</li><li>Sentiment-based ticket routing</li><li>Next-best-action for reps</li><li>Churn prediction</li></ul></div>
+    <div><h4>HR &amp; talent</h4><ul><li>Resume screening at scale, audited regularly for bias</li><li>Flight-risk modeling</li><li>Skills-gap analysis</li><li>Personalized coaching</li></ul></div>
+    <div><h4>Finance &amp; accounting</h4><ul><li>Invoice matching and approval routing</li><li>Fraud anomaly detection in milliseconds</li><li>Cash-flow scenario forecasting</li><li>Automated audit trails</li></ul></div>
+  </div>
+
+  <h3>The same functions on a campus</h3>
+  <div class="trio">
+    <div><h4>Admissions &amp; advancement</h4><ul><li>Engagement scoring: who to call first</li><li>Alumni giving-propensity models</li><li>Applicant chat around the clock</li></ul><div class="watch"><b>Watch out</b>A score decides who gets a call, never who gets admitted.</div></div>
+    <div><h4>Faculty, staff &amp; student workers</h4><ul><li>AI-drafted job descriptions</li><li>Student shifts scheduled around classes</li><li>Accounts provisioned at hire</li></ul><div class="watch"><b>Watch out</b>Any hiring tool needs a bias audit and a human making the call.</div></div>
+    <div><h4>The business office</h4><ul><li>Invoice matching and routing</li><li>Unusual P-card charges flagged</li><li>Budgets forecast against enrollment</li></ul><div class="watch"><b>Watch out</b>Every automated step needs a trail an auditor can follow.</div></div>
+  </div>
+  <div class="tryit" id="lab-bias"></div>
+  <div class="callout">AI earns its place on repeatable work; people stay accountable for decisions about people.</div>
+
+  <div data-kc-slot="kc5"></div>
+  <div class="pager"><button class="btn ghost" data-prev>Back</button><button class="btn" data-next>Next: predictive and prescriptive analytics</button></div>
+</section>
+
+<!-- ============ LESSON 6 ============ -->
+<section class="page" id="l6" data-title="6 · Predictive &amp; prescriptive" data-kc="kc6">
+  <p class="kicker">Lesson 6</p>
+  <h2>Long-term innovation: predictive and prescriptive analytics</h2>
+  <p>Analytics matures through four questions, and each one builds on the last. You can't recommend an action until you can forecast, and you can't forecast well until you understand why things happened.</p>
+  <ol class="steps">
+    <li><strong>What happened?</strong> Descriptive analytics: dashboards and reports.</li>
+    <li><strong>Why did it happen?</strong> Diagnostic analytics: causal AI and explainability.</li>
+    <li><strong>What will happen?</strong> Predictive analytics: forecasting models.</li>
+    <li><strong>What should we do?</strong> Prescriptive analytics: AI-driven recommendations.</li>
+  </ol>
+  <p>This week's Dashboard assignment lives mostly at step 1. Notice how much more value is available as you climb.</p>
+
+  <h3>Case study: UPS ORION</h3>
+  <p>ORION (On-Road Integrated Optimization and Navigation) recommends a delivery sequence for each driver every day. It's prescriptive analytics at enormous scale.</p>
+  <div class="stats">
+    <div><strong>$300–400M</strong><span>annual savings at full deployment</span></div>
+    <div><strong>100M</strong><span>fewer miles driven per year</span></div>
+    <div><strong>100,000 MT</strong><span>CO₂ emissions avoided per year</span></div>
+  </div>
+  <p>The math was only half the story. ORION's routes sometimes looked wrong to drivers who had run the same streets for years, and the savings depended on drivers trusting and following them. UPS had to invest in training, explanation, and change management to get there.</p>
+  <div class="tryit" id="lab-orion"></div>
+  <div class="callout">The algorithm was prescriptive; the adoption was human.</div>
+
+  <div data-kc-slot="kc6"></div>
+  <div class="pager"><button class="btn ghost" data-prev>Back</button><button class="btn" data-next>Next: generative AI and what's coming</button></div>
+</section>
+
+<!-- ============ LESSON 7 ============ -->
+<section class="page" id="l7" data-title="7 · Generative AI &amp; trends" data-kc="kc7">
+  <p class="kicker">Lesson 7</p>
+  <h2>Future trends and generative AI on campus</h2>
+  <div class="tablewrap"><table class="grid">
+    <thead><tr><th>Trend</th><th>What it means</th><th>Horizon</th></tr></thead>
+    <tbody>
+      <tr><td>Generative AI in enterprise systems</td><td>LLMs draft reports, summarize documents, and synthesize data across systems.</td><td>Now to 2 years</td></tr>
+      <tr><td>LLMs embedded in ERP, CRM &amp; SCM</td><td>Plain-English queries replace SQL and dashboards; copilots are the first wave.</td><td>Now to 3 years</td></tr>
+      <tr><td>Edge AI &amp; distributed intelligence</td><td>Inference moves into devices and sensors: real-time decisions, but more endpoints to secure.</td><td>2–5 years</td></tr>
+      <tr><td>Quantum-enhanced AI</td><td>Optimization, drug discovery, and logistics problems classical computers struggle with.</td><td>5–10 years</td></tr>
+    </tbody>
+  </table></div>
+  <p>The shift from <em>search</em> to <em>generate</em> changes how people work with information systems. You stop hunting for the report and start asking for it.</p>
+
+  <h3>It's already here</h3>
+  <p>Generative AI is arriving on campus through four doors: copilots in productivity suites (email, documents, meetings), AI features in education software for course design and feedback, vendor renewals that switch AI on in software the university already licenses, and every student's phone from the first day of class. The question isn't whether to use AI. It's which AI, with what data, and who's accountable.</p>
+
+  <h3>Four questions to ask every AI vendor</h3>
+  <ol class="steps">
+    <li>What data do you collect, and is it used to train your models?</li>
+    <li>Where is it stored, and who can access it?</li>
+    <li>Can we turn the feature off or limit it?</li>
+    <li>How do we know when it's wrong, and then what?</li>
+  </ol>
+  <div class="tryit" id="lab-vendor"></div>
+  <div class="callout">Not whether to use AI: which AI, with what data, and who's accountable.</div>
+
+  <div data-kc-slot="kc7"></div>
+  <div class="pager"><button class="btn ghost" data-prev>Back</button><button class="btn" data-next>Next: key takeaways</button></div>
+</section>
+
+<!-- ============ LESSON 8 ============ -->
+<section class="page" id="l8" data-title="8 · Key takeaways">
+  <p class="kicker">Lesson 8</p>
+  <h2>Key takeaways</h2>
+  <ol class="steps">
+    <li>AI transforms information systems across five dimensions at once.</li>
+    <li>Operations become intelligent: automation, resources, and supply chain.</li>
+    <li>Maturity is a ladder, not a leap, and some decisions stay with people.</li>
+    <li>Technical, organizational, and governance readiness advance together.</li>
+    <li>CRM, HR, and finance are the highest-value starting points.</li>
+    <li>Generative AI is here now: govern it and embed it thoughtfully.</li>
+  </ol>
+
+  <h3>Your knowledge check results</h3>
+  <p>Use this to decide what to review before Exam 2. Any check marked "not started" or below 80% is worth another pass.</p>
+  <div class="tablewrap"><table class="grid" id="kcSummary"><thead><tr><th>Lesson</th><th>Result</th><th></th></tr></thead><tbody></tbody></table></div>
+
+  <div class="pager"><button class="btn ghost" data-prev>Back</button><button class="btn gold" data-next>Start the assignment</button></div>
+</section>
+
+<!-- ============ ASSIGNMENT ============ -->
+<section class="page" id="assign" data-title="Assignment: The hospital CIO">
+  <p class="kicker">Graded assignment · 100 points</p>
+  <h2>The hospital CIO: a three-year AI roadmap</h2>
+  <p class="lede">You're the new CIO of a regional hospital network. The board approved $4 million for AI and wants a three-year roadmap. This assignment takes the four breakout prompts from class and builds them into a complete board-ready plan.</p>
+  <div class="note"><p><strong>Individual submission.</strong> If you worked this case in the live breakout, build on your group's notes. Your written answers must be your own. Work saves automatically in this browser; when you're done, build your submission at the bottom and upload the file to Canvas.</p></div>
+
+  <div class="case">
+    <h3>Case brief: Mesa Verde Health</h3>
+    <p class="exhibit">Mesa Verde Health is a fictional regional network: one 280-bed flagship hospital, one 90-bed community hospital, and three outpatient and urgent-care clinics. It has 3,200 employees. All figures below are case data for this assignment.</p>
+    <h4>Exhibit A: Systems today</h4>
+    <ul class="exhibit">
+      <li>The electronic health record (EHR) runs on premises on a version nine years old. The two hospitals run separate instances; the clinics use a third system.</li>
+      <li>There's no enterprise data warehouse. Each site has its own reporting analyst who builds reports in spreadsheets.</li>
+      <li>Nurse scheduling is done in spreadsheets at three of five sites. Supply ordering at two clinics is by email and fax.</li>
+    </ul>
+    <h4>Exhibit B: AI already in use</h4>
+    <ul class="exhibit">
+      <li>Email spam and phishing filtering.</li>
+      <li>A rule-based sepsis alert in the EHR that fires on fixed vital-sign thresholds. Nurses report alert fatigue; many alerts are dismissed without review.</li>
+      <li>Pharmacy drug-interaction alerts (rule-based).</li>
+      <li>A vendor AI dictation tool piloted by 12 physicians. No formal vendor review was done.</li>
+      <li>Staff surveys suggest some employees use free consumer chatbots for work. There is no AI policy.</li>
+    </ul>
+    <h4>Exhibit C: Operating pain points</h4>
+    <ul class="exhibit">
+      <li>Nurse overtime plus agency (traveler) staffing: $9.8M per year.</li>
+      <li>Medical supply spend: $41M per year; about 6% expires or is wasted.</li>
+      <li>Insurance claim denial rate: 11%. A 14-person team reworks denials by hand.</li>
+      <li>IT help desk: about 2,100 tickets a month, 40% of them password resets.</li>
+    </ul>
+    <h4>Exhibit D: Constraints</h4>
+    <ul class="exhibit">
+      <li>The $4M covers software, implementation, training, and any new hires over three years.</li>
+      <li>The network has a privacy officer and HIPAA compliance office, but no data governance committee.</li>
+      <li>The Chief Medical Officer is supportive but wary after the sepsis-alert experience.</li>
+    </ul>
+  </div>
+
+  <h3>How it's graded</h3>
+  <div class="tablewrap"><table class="grid rubric">
+    <thead><tr><th>Part</th><th>Full credit looks like</th><th>Points</th></tr></thead>
+    <tbody>
+      <tr><td>1 · Maturity assessment</td><td>A defensible level supported by at least two specific exhibit facts; recognizes that maturity can differ by function.</td><td>15</td></tr>
+      <tr><td>2 · Phase 1 priorities</td><td>Three foundation priorities in a sensible order; names the data infrastructure that must exist first and why.</td><td>20</td></tr>
+      <tr><td>3 · Operation selection</td><td>A clear choice with an ROI estimate built from case data, stated assumptions, and a reason the other two wait.</td><td>20</td></tr>
+      <tr><td>4 · Risk &amp; ethics</td><td>Specific guardrails that would be in place before clinical AI goes live, and a named accountable owner with a rationale.</td><td>20</td></tr>
+      <tr><td>5 · Roadmap &amp; budget</td><td>Three years mapped to the three phases, a budget that fits $4M, and a realistic target maturity level.</td><td>15</td></tr>
+      <tr><td>6 · Board briefing</td><td>A 60-second spoken summary (about 120–170 words) a non-technical board could act on.</td><td>10</td></tr>
+    </tbody>
+  </table></div>
+
+  <form id="assignForm" autocomplete="off" onsubmit="return false">
+    <div class="field"><label for="s_name">Your name</label><input type="text" id="s_name" name="s_name"></div>
+
+    <div class="part">
+      <h3>Part 1 · Maturity assessment <small>15 pts</small></h3>
+      <p>Where does Mesa Verde sit on Levels 1–4 today? What evidence supports it?</p>
+      <div class="field" data-req="m_level"><span class="lab">Overall current level</span>
+        <div class="choices one">
+          <label><input type="radio" name="m_level" value="Level 1 · Reactive"> Level 1 · Reactive</label>
+          <label><input type="radio" name="m_level" value="Level 2 · Predictive"> Level 2 · Predictive</label>
+          <label><input type="radio" name="m_level" value="Level 3 · Adaptive"> Level 3 · Adaptive</label>
+          <label><input type="radio" name="m_level" value="Level 4 · Autonomous"> Level 4 · Autonomous</label>
+        </div></div>
+      <div class="field" data-req="m_evidence"><label for="m_evidence">Evidence <span class="hint">Cite at least two specific facts from the exhibits. If some functions sit at a different level than others, say which.</span></label><textarea id="m_evidence" name="m_evidence"></textarea></div>
+    </div>
+
+    <div class="part">
+      <h3>Part 2 · Phase 1 priorities <small>20 pts</small></h3>
+      <p>Your top three year-one foundation priorities, in order, with one or two sentences on why each comes first.</p>
+      <div class="field" data-req="p1_a"><label for="p1_a">Priority 1</label><textarea id="p1_a" name="p1_a" style="min-height:70px"></textarea></div>
+      <div class="field" data-req="p1_b"><label for="p1_b">Priority 2</label><textarea id="p1_b" name="p1_b" style="min-height:70px"></textarea></div>
+      <div class="field" data-req="p1_c"><label for="p1_c">Priority 3</label><textarea id="p1_c" name="p1_c" style="min-height:70px"></textarea></div>
+      <div class="field" data-req="p_data"><label for="p_data">What data infrastructure must exist first? <span class="hint">Think about the three EHR systems, the missing warehouse, and who owns data quality.</span></label><textarea id="p_data" name="p_data"></textarea></div>
+    </div>
+
+    <div class="part">
+      <h3>Part 3 · Operation selection <small>20 pts</small></h3>
+      <p>Process automation, resource management, or supply chain: which offers the highest ROI for Mesa Verde? Build the case.</p>
+      <div class="field" data-req="op_choice"><span class="lab">Your choice</span>
+        <div class="choices one">
+          <label><input type="radio" name="op_choice" value="Process automation &amp; optimization"> Process automation &amp; optimization <span class="hint">&nbsp;(e.g., claim denials, help desk)</span></label>
+          <label><input type="radio" name="op_choice" value="Intelligent resource management"> Intelligent resource management <span class="hint">&nbsp;(e.g., nurse staffing)</span></label>
+          <label><input type="radio" name="op_choice" value="Supply chain intelligence"> Supply chain intelligence <span class="hint">&nbsp;(e.g., supply waste)</span></label>
+        </div></div>
+
+      <div class="calc">
+        <strong>ROI estimator</strong>
+        <p style="margin:.3em 0 .6em;font-size:.93rem">Enter a baseline cost from Exhibit C, the improvement you think is realistic, and what you'd spend on this initiative over three years. The estimator assumes savings ramp up: 25% of the full annual savings in Year 1, 75% in Year 2, 100% in Year 3. Change your inputs, not the ramp, and explain your assumptions below.</p>
+        <div class="row3">
+          <div class="field"><label for="roi_base">Annual baseline cost ($)</label><input type="number" id="roi_base" name="roi_base" min="0" step="10000"></div>
+          <div class="field"><label for="roi_pct">Expected reduction (%)</label><input type="number" id="roi_pct" name="roi_pct" min="0" max="100" step="0.5"></div>
+          <div class="field"><label for="roi_cost">3-year initiative cost ($)</label><input type="number" id="roi_cost" name="roi_cost" min="0" step="10000"></div>
+        </div>
+        <div class="calc-out" aria-live="polite">
+          <div><strong id="o_annual">—</strong><span>full annual savings</span></div>
+          <div><strong id="o_net">—</strong><span>3-year net return</span></div>
+          <div><strong id="o_pay">—</strong><span>payback at full run-rate</span></div>
+        </div>
+      </div>
+
+      <div class="field" data-req="op_case"><label for="op_case">Your ROI case <span class="hint">Explain where your reduction percentage comes from and what has to be true for it to happen.</span></label><textarea id="op_case" name="op_case"></textarea></div>
+      <div class="field" data-req="op_whynot"><label for="op_whynot">Why the other two wait</label><textarea id="op_whynot" name="op_whynot" style="min-height:70px"></textarea></div>
+    </div>
+
+    <div class="part">
+      <h3>Part 4 · Risk &amp; ethics <small>20 pts</small></h3>
+      <p>What guardrails must exist before clinical AI goes live, and who is accountable?</p>
+      <div class="field" data-req="g"><span class="lab">Guardrails in place before go-live <span class="hint">Select at least four, then add any of your own.</span></span>
+        <div class="choices">
+          <label><input type="checkbox" name="g" value="AI governance committee with clinical, privacy, and IT members"> AI governance committee with clinical, privacy, and IT members</label>
+          <label><input type="checkbox" name="g" value="Clinician reviews and can override every AI recommendation"> Clinician reviews and can override every AI recommendation</label>
+          <label><input type="checkbox" name="g" value="HIPAA privacy and security review of each tool"> HIPAA privacy and security review of each tool</label>
+          <label><input type="checkbox" name="g" value="Vendor review using the four vendor questions"> Vendor review using the four vendor questions</label>
+          <label><input type="checkbox" name="g" value="Bias audit across patient populations before and after launch"> Bias audit across patient populations before and after launch</label>
+          <label><input type="checkbox" name="g" value="Explainability: clinicians can see why the model flagged a patient"> Explainability: clinicians can see why the model flagged a patient</label>
+          <label><input type="checkbox" name="g" value="Ongoing monitoring of accuracy and alert volume, with a shutoff process"> Ongoing monitoring of accuracy and alert volume, with a shutoff process</label>
+          <label><input type="checkbox" name="g" value="Approved-tools list and staff AI-use policy"> Approved-tools list and staff AI-use policy</label>
+          <label><input type="checkbox" name="g" value="Patient-facing disclosure where AI is used in care"> Patient-facing disclosure where AI is used in care</label>
+          <label><input type="checkbox" name="g" value="Staff training before go-live"> Staff training before go-live</label>
+        </div></div>
+      <div class="field"><label for="g_other">Other guardrails <span class="hint">Optional</span></label><input type="text" id="g_other" name="g_other"></div>
+      <div class="field" data-req="acc_owner"><label for="acc_owner">Who is accountable for clinical AI?</label>
+        <select id="acc_owner" name="acc_owner">
+          <option value="">Choose a role</option>
+          <option>Chief Information Officer (you)</option>
+          <option>Chief Medical Officer</option>
+          <option>Chief Medical Information Officer (CMIO)</option>
+          <option>Chief Nursing Officer</option>
+          <option>AI governance committee (shared)</option>
+          <option>Vendor</option>
+        </select></div>
+      <div class="field" data-req="acc_why"><label for="acc_why">Why that owner? <span class="hint">Who signs off, who monitors, and what happens when the model is wrong?</span></label><textarea id="acc_why" name="acc_why"></textarea></div>
+    </div>
+
+    <div class="part">
+      <h3>Part 5 · Three-year roadmap &amp; budget <small>15 pts</small></h3>
+      <p>Map each year to a phase, list the main initiatives, and allocate the $4M.</p>
+
+      <div class="budget" aria-live="polite">
+        <div class="budget-top"><span>Board approval</span><strong id="b_total">$0 of $4,000,000</strong></div>
+        <div class="meter" id="meter"><span class="y1" id="m1"></span><span class="y2" id="m2"></span><span class="y3" id="m3"></span></div>
+        <div class="budget-msg" id="b_msg">Enter a budget for each year below.</div>
+      </div>
+
+      <div class="field" data-req="y1_plan"><label for="y1_plan">Year 1 · Foundation building</label><textarea id="y1_plan" name="y1_plan" style="min-height:80px"></textarea></div>
+      <div class="field" data-req="y1_budget"><label for="y1_budget">Year 1 budget ($)</label><input type="number" id="y1_budget" name="y1_budget" min="0" step="10000"></div>
+      <div class="field" data-req="y2_plan"><label for="y2_plan">Year 2 · Scale &amp; integrate</label><textarea id="y2_plan" name="y2_plan" style="min-height:80px"></textarea></div>
+      <div class="field" data-req="y2_budget"><label for="y2_budget">Year 2 budget ($)</label><input type="number" id="y2_budget" name="y2_budget" min="0" step="10000"></div>
+      <div class="field" data-req="y3_plan"><label for="y3_plan">Year 3 · Innovation &amp; transformation</label><textarea id="y3_plan" name="y3_plan" style="min-height:80px"></textarea></div>
+      <div class="field" data-req="y3_budget"><label for="y3_budget">Year 3 budget ($)</label><input type="number" id="y3_budget" name="y3_budget" min="0" step="10000"></div>
+      <div class="field" data-req="target_level"><label for="target_level">Target maturity by the end of Year 3</label>
+        <select id="target_level" name="target_level">
+          <option value="">Choose a level</option>
+          <option>Level 2 · Predictive across most functions</option>
+          <option>Level 2 overall, Level 3 in selected operations</option>
+          <option>Level 3 · Adaptive across most functions</option>
+          <option>Level 4 · Autonomous in selected operations</option>
+        </select></div>
+      <div class="field"><label for="target_why">Why that target? <span class="hint">Optional, but strong answers connect this to which decisions stay with people.</span></label><textarea id="target_why" name="target_why" style="min-height:70px"></textarea></div>
+    </div>
+
+    <div class="part">
+      <h3>Part 6 · Board briefing <small>10 pts</small></h3>
+      <p>Write the 60-second Phase 1 roadmap you'd say out loud to the board. No jargon, one clear ask.</p>
+      <div class="field" data-req="brief"><label for="brief">Your briefing</label><textarea id="brief" name="brief" style="min-height:150px"></textarea><div class="wc" id="wc">0 words · aim for 120–170</div></div>
+    </div>
+  </form>
+
+  <div class="part">
+    <h3>Build your submission</h3>
+    <p>This checks for missing pieces, then builds a formatted document. Download it (opens in Word) or save it as a PDF, and upload the file to the Canvas assignment.</p>
+    <div class="kc-actions">
+      <button class="btn gold" id="buildBtn">Build my submission</button>
+      <button class="btn ghost" id="resetBtn" type="button">Clear my answers</button>
+    </div>
+    <div id="missing" class="missing" style="display:none" role="alert"></div>
+    <div class="kc-actions" id="exportBar" style="display:none">
+      <button class="btn" id="dlBtn">Download for Word</button>
+      <button class="btn ghost" id="printBtn">Print or save as PDF</button>
+      <button class="btn ghost" id="copyBtn">Copy as text</button>
+      <a id="openTab" href="#" target="_blank" rel="noopener" style="font-size:.92rem">Open module in a new tab</a>
+    </div>
+    <div id="preview"></div>
+  </div>
+
+  <div class="pager"><button class="btn ghost" data-prev>Back to takeaways</button><span></span></div>
+</section>
+
+</main>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function(){
+"use strict";
+var KEY = "busb333-week6-ai-is-v1";
+
+/* ---------- knowledge check data ---------- */
+var AREAS = ["Data processing","Decision making","User interaction","System maintenance","Business intelligence"];
+var LEVELS = ["Level 1 · Reactive","Level 2 · Predictive","Level 3 · Adaptive","Level 4 · Autonomous"];
+var ANALYTICS = ["Descriptive","Diagnostic","Predictive","Prescriptive"];
+
+var KC = {
+ kc1:{title:"Knowledge check: the five areas", qs:[
+  {type:"match", prompt:"Match each campus scenario to the area of AI it represents.", choices:AREAS, items:[
+    ["A bot answers a student's Wi-Fi question at 2 a.m.",2],
+    ["Monitoring software warns that a classroom projector is about to fail.",3],
+    ["A model flags first-year students who may not return in the spring.",1],
+    ["Enrollment records are cleaned and synced from the SIS into Canvas.",0],
+    ["A dashboard forecasts how many housing beds will be needed next fall.",4]],
+   explain:"Each area pairs with a question: trustworthy data (processing), who acts on the flag (decisions), handoff to a human (interaction), who gets the alert (maintenance), and whether leadership trusts the forecast (BI)."},
+  {type:"mcq", prompt:"According to the lesson, the hardest questions about AI on campus are mostly about…", options:["Choosing the most accurate algorithm","Data, accountability, handoffs, and trust","How much computing power the university can afford","Which vendor has the best brand"], answer:1,
+   explain:"Look at the question column for all five areas: none is about algorithms. They're about data quality, who's responsible, where a human steps in, and whether people trust the output."}
+ ]},
+ kc2:{title:"Knowledge check: AI-driven operations", qs:[
+  {type:"mcq", prompt:"A purchase approval currently needs seven signatures, three of which add no real review. What should happen before automating it?", options:["Automate all seven steps so it runs faster","Add an AI step to check the three extra signers","Map and redesign the process, then automate what remains","Buy an RPA license and let the bot learn the process"], answer:2,
+   explain:"Fix a process before you automate it. Automating a wasteful process just produces the waste faster."},
+  {type:"mcq", prompt:"Which is an example of intelligent resource management?", options:["A bot that keys invoice data into the ERP","Scheduling help-desk staff against predicted ticket volume","Monitoring suppliers for disruption risk","Optimizing delivery routes"], answer:1,
+   explain:"Resource management covers staffing, compute, and energy matched to predicted demand. Invoice entry is process automation; supplier risk and routing are supply chain intelligence."},
+  {type:"mcq", prompt:"UPS ORION is mainly an example of…", options:["Process mining","Supply chain intelligence through route optimization","Robotic process automation","Smart-building energy management"], answer:1,
+   explain:"ORION optimizes delivery routes, which sits under supply chain intelligence."}
+ ]},
+ kc3:{title:"Knowledge check: the maturity model", qs:[
+  {type:"match", prompt:"Place each example on the maturity ladder.", choices:LEVELS, items:[
+    ["A chatbot that answers only from a fixed script",0],
+    ["A fraud alert that fires whenever a charge exceeds a set dollar amount",0],
+    ["A model trained on past cohorts that predicts which students may not persist",1],
+    ["Courseware that changes the next problem based on how a student just answered",2],
+    ["Airline seat prices that update minute by minute with demand",2],
+    ["A shuttle that drives itself within a geofenced campus loop",3]],
+   explain:"Reactive follows rules people wrote; predictive learns from history to forecast; adaptive adjusts in real time; autonomous decides and acts within human-set boundaries."},
+  {type:"mcq", prompt:"Under the human-in-the-loop principle, which decision should stay with a person?", options:["Sorting phishing email out of inboxes","Forecasting next month's printer toner orders","Awarding a student's financial aid package","Routing a help-desk ticket to the right queue"], answer:2,
+   explain:"Grades, admissions, financial aid, and conduct decisions must be explainable, appealable, and owned by an accountable person."},
+  {type:"mcq", prompt:"Where do most organizations sit on the maturity ladder today?", options:["Level 1 or 2","Level 3","Level 4","Evenly spread across all four levels"], answer:0,
+   explain:"Most organizations are at Level 1 or 2. Higher ed is reactive everywhere and investing in predictive now."}
+ ]},
+ kc4:{title:"Knowledge check: strategy and governance", qs:[
+  {type:"mcq", prompt:"A faculty member pastes a roster with student grades into a free consumer chatbot. Which governance principle is most directly violated?", options:["Vendor review","Data classification","AI literacy","Teaching and integrity"], answer:1,
+   explain:"FERPA-protected records never go into unapproved tools. It also breaks the approved-tools principle, but the core problem is putting protected data where it doesn't belong."},
+  {type:"mcq", prompt:"Why does the lesson say AI detectors can't stand alone?", options:["They're too expensive to license","They're unreliable on their own, so assessment design matters more","Faculty aren't allowed to use them","They only work in Canvas"], answer:1,
+   explain:"Detectors produce errors in both directions. Designing assessments that make AI misuse less useful is the stronger control."},
+  {type:"mcq", prompt:"An organization has clean data and a solid cloud platform, but no executive sponsor and no training plan. Which success factor is missing?", options:["Technical","Organizational","Governance and ethics","None; it's ready to scale"], answer:1,
+   explain:"Executive sponsorship, a steering committee, and upskilling and change management are the organizational factors."},
+  {type:"mcq", prompt:"Moving successful pilots into production belongs to which phase?", options:["Phase 1 · Foundation building","Phase 2 · Scale and integrate","Phase 3 · Innovation and transformation","It happens before Phase 1"], answer:1,
+   explain:"Phase 1 runs high-value pilots; Phase 2 moves them into production and inside existing IS workflows."}
+ ]},
+ kc5:{title:"Knowledge check: where to start", qs:[
+  {type:"match", prompt:"Match each campus proposal to the watch-out that applies.", choices:["A score decides who gets a call, never who gets admitted","Any hiring tool needs a bias audit and a human making the call","Every automated step needs a trail an auditor can follow"], items:[
+    ["Admissions wants to auto-decline applicants with a low engagement score",0],
+    ["HR wants a tool to rank applicants for an open staff position",1],
+    ["The business office wants a bot to auto-approve invoices under $500",2]],
+   explain:"AI earns its place on repeatable work; people stay accountable for decisions about people, and automated finance steps stay auditable."},
+  {type:"mcq", prompt:"Why are CRM, HR, and finance the best starting points for AI?", options:["They have the smallest budgets","They have rich historical data and clear success metrics","They don't involve personal data","Regulators exempt them"], answer:1,
+   explain:"Rich data trains good models, and clear metrics tell you quickly whether the model is helping."}
+ ]},
+ kc6:{title:"Knowledge check: analytics", qs:[
+  {type:"order", prompt:"Put the four analytics questions in the order they build on each other.", items:["What happened?","Why did it happen?","What will happen?","What should we do?"], show:[2,0,3,1],
+   explain:"Descriptive, diagnostic, predictive, prescriptive. Each step depends on the one before it."},
+  {type:"match", prompt:"Label each enrollment statement with its type of analytics.", choices:ANALYTICS, items:[
+    ["Fall enrollment fell 4% compared with last year.",0],
+    ["The drop came mostly from transfer students after a delay in credit evaluations.",1],
+    ["Next fall's first-year class will likely be 610–640 students.",2],
+    ["Open two more sections of BUSB 333 and move an advisor to transfer intake.",3]],
+   explain:"Reporting a number is descriptive; explaining the cause is diagnostic; forecasting is predictive; recommending an action is prescriptive."},
+  {type:"mcq", prompt:"\"The algorithm was prescriptive; the adoption was human\" means that…", options:["ORION's recommendations were usually wrong","ORION's value depended on drivers trusting and following it","Drivers wrote the algorithm","ORION replaced drivers with autonomous trucks"], answer:1,
+   explain:"Savings only arrive when people act on the recommendation. Change management was as important as the math."}
+ ]},
+ kc7:{title:"Knowledge check: generative AI and trends", qs:[
+  {type:"mcq", prompt:"At renewal, your LMS vendor switches on an AI feedback feature. Which vendor question addresses whether student work could train the vendor's models?", options:["What data do you collect, and is it used to train your models?","Where is it stored, and who can access it?","Can we turn the feature off or limit it?","How do we know when it's wrong, and then what?"], answer:0,
+   explain:"Question 1 covers collection and training use. The others matter too, but this is the one that answers it directly."},
+  {type:"mcq", prompt:"Which trend does the lesson place furthest out?", options:["LLMs embedded in ERP, CRM, and SCM","Edge AI","Generative AI in enterprise systems","Quantum-enhanced AI"], answer:3,
+   explain:"Quantum-enhanced AI is on a 5–10 year horizon. Generative AI and embedded LLMs are already arriving."},
+  {type:"mcq", prompt:"What's the main trade-off of edge AI?", options:["Faster real-time decisions, but more endpoints to secure","Lower accuracy with no speed benefit","It only works in data centers","It removes the need for networks"], answer:0,
+   explain:"Moving inference onto devices and sensors speeds decisions but multiplies the number of things that can be attacked."}
+ ]}
+};
+
+/* ---------- state ---------- */
+var state = {page:0, visited:{}, kc:{}, a:{}, built:false};
+try{ var raw = localStorage.getItem(KEY); if(raw){ var s=JSON.parse(raw); if(s && typeof s==="object"){ state = Object.assign(state, s); } } }catch(e){}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
+
+var pages = Array.prototype.slice.call(document.querySelectorAll("section.page"));
+var navList = document.getElementById("navList");
+
+function isDone(sec){
+  if(sec.id==="assign") return !!state.built;
+  var kc = sec.getAttribute("data-kc");
+  if(kc) return !!state.kc[kc];
+  return !!state.visited[sec.id];
+}
+
+function buildNav(){
+  navList.innerHTML = "";
+  pages.forEach(function(sec,i){
+    if(sec.id==="assign"){ var sep=document.createElement("li"); sep.className="sep"; sep.setAttribute("aria-hidden","true"); navList.appendChild(sep); }
+    var li=document.createElement("li"); if(isDone(sec)) li.className="done";
+    var b=document.createElement("button"); b.type="button";
+    if(sec.id==="assign") b.className="assign-link";
+    b.innerHTML='<span class="dot" aria-hidden="true"></span><span>'+sec.getAttribute("data-title")+'</span>';
+    if(i===state.page) b.setAttribute("aria-current","page");
+    b.addEventListener("click",function(){ show(i); });
+    li.appendChild(b); navList.appendChild(li);
+  });
+  var done = pages.filter(isDone).length;
+  document.getElementById("progressNote").textContent = done+" of "+pages.length+" sections complete";
+  var p = done/pages.length, spans=document.querySelectorAll(".bar span");
+  for(var k=0;k<3;k++){ var f=Math.max(0,Math.min(1,p*3-k)); spans[k].style.width=(f*100)+"%"; }
+}
+
+function show(i){
+  i=Math.max(0,Math.min(pages.length-1,i));
+  pages.forEach(function(s,j){ s.classList.toggle("active", j===i); });
+  state.page=i; state.visited[pages[i].id]=true; save();
+  if(pages[i].id==="l8") renderSummary();
+  buildNav();
+  var m=document.getElementById("main"); m.focus({preventScroll:true});
+  window.scrollTo(0,0);
+}
+document.addEventListener("click",function(e){
+  if(e.target.closest("[data-next]")) show(state.page+1);
+  if(e.target.closest("[data-prev]")) show(state.page-1);
+});
+
+/* ---------- knowledge check rendering ---------- */
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
+
+function renderKC(id){
+  var slot=document.querySelector('[data-kc-slot="'+id+'"]'); if(!slot) return;
+  var kc=KC[id], saved=(state.kc[id]&&state.kc[id].answers)||[];
+  var h='<div class="kc"><div class="kc-head"><h3>'+esc(kc.title)+'</h3><span>Practice · not graded · retry anytime</span></div><div class="kc-body">';
+  kc.qs.forEach(function(q,qi){
+    var nm=id+"_"+qi;
+    h+='<fieldset class="q" data-q="'+qi+'"><legend>'+(qi+1)+'. '+esc(q.prompt)+'</legend><div>';
+    if(q.type==="mcq"){
+      q.options.forEach(function(o,oi){
+        h+='<label class="opt"><input type="radio" name="'+nm+'" value="'+oi+'"'+(saved[qi]===oi?" checked":"")+'><span>'+esc(o)+'</span></label>';
+      });
+    } else if(q.type==="match"){
+      q.items.forEach(function(it,ii){
+        var sv=saved[qi]?saved[qi][ii]:"";
+        h+='<div class="mrow"><span>'+esc(it[0])+'</span><select aria-label="'+esc(it[0])+'" data-i="'+ii+'"><option value="">Choose…</option>';
+        q.choices.forEach(function(c,ci){ h+='<option value="'+ci+'"'+(sv===ci?" selected":"")+'>'+esc(c)+'</option>'; });
+        h+='</select></div>';
+      });
+    } else if(q.type==="order"){
+      q.show.forEach(function(itemIdx,ii){
+        var sv=saved[qi]?saved[qi][ii]:"";
+        h+='<div class="mrow"><span>'+esc(q.items[itemIdx])+'</span><select aria-label="Position for '+esc(q.items[itemIdx])+'" data-i="'+ii+'"><option value="">Position…</option>';
+        for(var p=0;p<q.items.length;p++){ h+='<option value="'+p+'"'+(sv===p?" selected":"")+'>Step '+(p+1)+'</option>'; }
+        h+='</select></div>';
+      });
+    }
+    h+='</div><div class="fb" aria-live="polite"></div></fieldset>';
+  });
+  h+='<div class="kc-actions"><button class="btn" type="button" data-check="'+id+'">Check my answers</button><span class="kc-score"></span></div></div></div>';
+  slot.innerHTML=h;
+  if(state.kc[id]) grade(id,false);
+}
+
+function grade(id, fresh){
+  var kc=KC[id], slot=document.querySelector('[data-kc-slot="'+id+'"]');
+  var answers=[], score=0, unanswered=0;
+  kc.qs.forEach(function(q,qi){
+    var fs=slot.querySelector('[data-q="'+qi+'"]'), fb=fs.querySelector(".fb"), ok=false;
+    if(q.type==="mcq"){
+      var c=fs.querySelector("input:checked"), v=c?Number(c.value):null; answers[qi]=v;
+      if(v===null) unanswered++;
+      ok=(v===q.answer);
+      fb.innerHTML=(v===null?"<strong>No answer selected.</strong> ":ok?"<strong>Correct.</strong> ":"<strong>Not quite.</strong> The answer is: "+esc(q.options[q.answer])+". ")+esc(q.explain);
+    } else {
+      var sels=fs.querySelectorAll("select"), arr=[], allRight=true, any=false;
+      sels.forEach(function(s,ii){
+        var v=s.value===""?null:Number(s.value); arr.push(v); if(v!==null) any=true;
+        var correct = q.type==="match" ? q.items[ii][1] : q.show[ii];
+        var row=s.closest(".mrow"); row.classList.remove("right","wrong");
+        if(v===correct) row.classList.add("right"); else { row.classList.add("wrong"); allRight=false; }
+      });
+      answers[qi]=arr; if(!any) unanswered++;
+      ok=allRight;
+      var nRight=fs.querySelectorAll(".mrow.right").length;
+      fb.innerHTML=(ok?"<strong>All correct.</strong> ":"<strong>"+nRight+" of "+sels.length+" correct.</strong> Rows outlined in red need another look. ")+esc(q.explain);
+    }
+    fb.className="fb show "+(ok?"right":"wrong");
+    if(ok) score++;
+  });
+  slot.querySelector(".kc-score").textContent = score+" of "+kc.qs.length+" correct"+(score===kc.qs.length?". Nicely done.":". Adjust and check again.");
+  if(fresh){
+    var prev=state.kc[id];
+    state.kc[id]={score:score,total:kc.qs.length,best:Math.max(score,prev?prev.best||0:0),answers:answers};
+    save(); buildNav();
+  }
+}
+document.addEventListener("click",function(e){
+  var b=e.target.closest("[data-check]"); if(b) grade(b.getAttribute("data-check"),true);
+});
+Object.keys(KC).forEach(renderKC);
+
+function renderSummary(){
+  var tb=document.querySelector("#kcSummary tbody"), h="";
+  pages.forEach(function(sec,i){
+    var id=sec.getAttribute("data-kc"); if(!id) return;
+    var r=state.kc[id], txt="Not started";
+    if(r){ var pct=Math.round(100*r.best/r.total); txt="Best: "+r.best+" of "+r.total+" ("+pct+"%)"; }
+    h+='<tr><td>'+esc(sec.getAttribute("data-title"))+'</td><td>'+txt+'</td><td><button class="btn ghost" type="button" data-go="'+i+'" style="padding:4px 10px">Review</button></td></tr>';
+  });
+  tb.innerHTML=h;
+}
+document.addEventListener("click",function(e){ var g=e.target.closest("[data-go]"); if(g) show(Number(g.getAttribute("data-go"))); });
+
+/* ---------- assignment form ---------- */
+var form=document.getElementById("assignForm");
+var money=new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",maximumFractionDigits:0});
+function num(n){ var v=parseFloat(state.a[n]); return isFinite(v)?v:0; }
+
+function restoreForm(){
+  Array.prototype.forEach.call(form.elements,function(el){
+    if(!el.name) return; var v=state.a[el.name];
+    if(el.type==="radio") el.checked=(v===el.value);
+    else if(el.type==="checkbox") el.checked=Array.isArray(v)&&v.indexOf(el.value)>-1;
+    else if(v!=null) el.value=v;
+  });
+}
+function readField(el){
+  if(el.type==="checkbox"){
+    state.a[el.name]=Array.prototype.filter.call(form.querySelectorAll('input[name="'+el.name+'"]'),function(c){return c.checked;}).map(function(c){return c.value;});
+  } else state.a[el.name]=el.value;
+}
+form.addEventListener("input",function(e){ if(e.target.name){ readField(e.target); var f=e.target.closest(".field"); if(f) f.classList.remove("invalid"); save(); updateDerived(); }});
+form.addEventListener("change",function(e){ if(e.target.name){ readField(e.target); save(); updateDerived(); }});
+
+function wordCount(s){ return (String(s||"").trim().match(/\S+/g)||[]).length; }
+
+function roi(){
+  var base=num("roi_base"), pct=num("roi_pct"), cost=num("roi_cost");
+  var annual=base*pct/100, three=annual*(0.25+0.75+1), net=three-cost;
+  var pay = annual>0 ? cost/(annual/12) : null;
+  return {annual:annual,net:net,pay:pay,ready:base>0&&pct>0};
+}
+function updateDerived(){
+  var r=roi();
+  document.getElementById("o_annual").textContent=r.ready?money.format(r.annual):"—";
+  document.getElementById("o_net").textContent=r.ready?money.format(r.net):"—";
+  document.getElementById("o_pay").textContent=(r.ready&&r.pay!==null)?(r.pay<1?"under 1 month":Math.round(r.pay)+" months"):"—";
+
+  var y=[num("y1_budget"),num("y2_budget"),num("y3_budget")], tot=y[0]+y[1]+y[2], cap=4000000;
+  document.getElementById("b_total").textContent=money.format(tot)+" of $4,000,000";
+  var scale=Math.max(cap,tot);
+  ["m1","m2","m3"].forEach(function(id,i){ var el=document.getElementById(id); el.style.width=(100*y[i]/scale)+"%"; el.textContent=y[i]>=scale*0.09?"Y"+(i+1)+" "+money.format(y[i]):""; });
+  var meter=document.getElementById("meter"), msg=document.getElementById("b_msg");
+  meter.classList.toggle("over",tot>cap);
+  if(tot===0) msg.textContent="Enter a budget for each year below.";
+  else if(tot>cap) msg.textContent="Over by "+money.format(tot-cap)+". The board approved $4M; cut scope or phase it differently.";
+  else if(tot<cap) msg.textContent=money.format(cap-tot)+" unallocated. That's fine if you're holding a contingency reserve; say so in your plan.";
+  else msg.textContent="Fully allocated.";
+
+  var wc=wordCount(state.a.brief), wEl=document.getElementById("wc");
+  wEl.textContent=wc+" words · aim for 120–170";
+  wEl.className="wc "+(wc===0?"":(wc>=120&&wc<=170)?"good":"warn");
+}
+
+var REQ=[
+ ["s_name","Your name"],["m_level","Part 1: current level"],["m_evidence","Part 1: evidence"],
+ ["p1_a","Part 2: priority 1"],["p1_b","Part 2: priority 2"],["p1_c","Part 2: priority 3"],["p_data","Part 2: data infrastructure"],
+ ["op_choice","Part 3: your choice"],["roi_base","Part 3: ROI baseline cost"],["roi_pct","Part 3: ROI expected reduction"],["roi_cost","Part 3: ROI initiative cost"],["op_case","Part 3: ROI case"],["op_whynot","Part 3: why the other two wait"],
+ ["g","Part 4: at least four guardrails"],["acc_owner","Part 4: accountable owner"],["acc_why","Part 4: why that owner"],
+ ["y1_plan","Part 5: Year 1 plan"],["y1_budget","Part 5: Year 1 budget"],["y2_plan","Part 5: Year 2 plan"],["y2_budget","Part 5: Year 2 budget"],["y3_plan","Part 5: Year 3 plan"],["y3_budget","Part 5: Year 3 budget"],["target_level","Part 5: target maturity"],
+ ["brief","Part 6: board briefing"]
+];
+function filled(n){
+  var v=state.a[n];
+  if(n==="g") return Array.isArray(v)&&v.length>=4;
+  return v!=null&&String(v).trim()!=="";
+}
+function fieldFor(n){
+  var el=form.querySelector('[name="'+n+'"]'); if(!el) return null;
+  return el.closest(".field");
+}
+
+function para(s){ return esc(s).replace(/\n{2,}/g,"</p><p>").replace(/\n/g,"<br>"); }
+function docHTML(){
+  var a=state.a, r=roi(), y=[num("y1_budget"),num("y2_budget"),num("y3_budget")], tot=y[0]+y[1]+y[2];
+  var g=(a.g||[]).slice(); if(a.g_other&&a.g_other.trim()) g.push(a.g_other.trim());
+  var h='<h2>The Hospital CIO: Three-Year AI Roadmap for Mesa Verde Health</h2>';
+  h+='<p><strong>'+esc(a.s_name)+'</strong><br>BUSB 333 Business Information Systems · Week 6 · University of Redlands'+'</p>';
+  h+='<h3>Part 1 · Maturity assessment</h3><p><strong>Current level:</strong> '+esc(a.m_level)+'</p><p>'+para(a.m_evidence)+'</p>';
+  h+='<h3>Part 2 · Phase 1 priorities</h3><ol><li>'+para(a.p1_a)+'</li><li>'+para(a.p1_b)+'</li><li>'+para(a.p1_c)+'</li></ol><p><strong>Data infrastructure first:</strong> '+para(a.p_data)+'</p>';
+  h+='<h3>Part 3 · Operation selection</h3><p><strong>Choice:</strong> '+esc(a.op_choice)+'</p>';
+  h+='<p><strong>ROI estimate:</strong> baseline '+money.format(num("roi_base"))+' per year × '+num("roi_pct")+'% reduction = '+money.format(r.annual)+' full annual savings. With a 25% / 75% / 100% ramp and a 3-year cost of '+money.format(num("roi_cost"))+', 3-year net return is '+money.format(r.net)+(r.pay!==null?'; payback at full run-rate is about '+Math.max(1,Math.round(r.pay))+' months':'')+'.</p>';
+  h+='<p>'+para(a.op_case)+'</p><p><strong>Why the other two wait:</strong> '+para(a.op_whynot)+'</p>';
+  h+='<h3>Part 4 · Risk &amp; ethics</h3><p><strong>Guardrails before clinical AI goes live:</strong></p><ul>'+g.map(function(x){return '<li>'+esc(x)+'</li>';}).join("")+'</ul>';
+  h+='<p><strong>Accountable owner:</strong> '+esc(a.acc_owner)+'</p><p>'+para(a.acc_why)+'</p>';
+  h+='<h3>Part 5 · Three-year roadmap &amp; budget</h3>';
+  h+='<table border="1" cellpadding="6" style="border-collapse:collapse;width:100%"><tr><th align="left">Year / phase</th><th align="left">Initiatives</th><th align="right">Budget</th></tr>';
+  [["Year 1 · Foundation building","y1_plan"],["Year 2 · Scale & integrate","y2_plan"],["Year 3 · Innovation & transformation","y3_plan"]].forEach(function(row,i){
+    h+='<tr><td valign="top">'+esc(row[0])+'</td><td valign="top">'+para(a[row[1]])+'</td><td valign="top" align="right">'+money.format(y[i])+'</td></tr>';
+  });
+  h+='<tr><td colspan="2"><strong>Total (board approval $4,000,000)</strong></td><td align="right"><strong>'+money.format(tot)+'</strong></td></tr></table>';
+  h+='<p><strong>Target maturity by end of Year 3:</strong> '+esc(a.target_level)+'</p>'+(a.target_why?'<p>'+para(a.target_why)+'</p>':'');
+  h+='<h3>Part 6 · Board briefing ('+wordCount(a.brief)+' words)</h3><p>'+para(a.brief)+'</p>';
+  return h;
+}
+function docText(){
+  var tmp=document.createElement("div"); tmp.innerHTML=docHTML().replace(/<\/(p|h2|h3|li|tr)>/g,"$&\n").replace(/<br>/g,"\n").replace(/<td/g," <td");
+  return tmp.textContent.replace(/\n{3,}/g,"\n\n").trim();
+}
+
+document.getElementById("buildBtn").addEventListener("click",function(){
+  form.querySelectorAll(".field.invalid").forEach(function(f){f.classList.remove("invalid");});
+  var miss=REQ.filter(function(r){return !filled(r[0]);});
+  var mBox=document.getElementById("missing"), prev=document.getElementById("preview"), bar=document.getElementById("exportBar");
+  var tot=num("y1_budget")+num("y2_budget")+num("y3_budget");
+  var notes=[];
+  if(tot>4000000) notes.push("Your budget is over $4M. Bring it within the board's approval.");
+  if(miss.length||notes.length){
+    miss.forEach(function(r){ var f=fieldFor(r[0]); if(f) f.classList.add("invalid"); });
+    mBox.innerHTML="<strong>A few pieces still need attention before you can build your submission:</strong><ul>"+miss.map(function(r){return "<li>"+esc(r[1])+"</li>";}).concat(notes.map(function(n){return "<li>"+esc(n)+"</li>";})).join("")+"</ul>";
+    mBox.style.display="block"; prev.classList.remove("show"); bar.style.display="none";
+    mBox.scrollIntoView({behavior:"smooth",block:"center"});
+    return;
+  }
+  mBox.style.display="none";
+  prev.innerHTML=docHTML(); prev.classList.add("show"); bar.style.display="flex";
+  state.built=true; save(); buildNav();
+  var wc=wordCount(state.a.brief);
+  toast(wc<120||wc>170?"Submission built. Your briefing is "+wc+" words; consider tightening it to 120–170.":"Submission built. Download it or save as PDF.");
+  bar.scrollIntoView({behavior:"smooth",block:"start"});
+});
+
+function fileName(ext){ return "BUSB333_W6_HospitalCIO_"+(String(state.a.s_name||"student").trim().replace(/[^A-Za-z0-9]+/g,"_")||"student")+"."+ext; }
+document.getElementById("dlBtn").addEventListener("click",function(){
+  var html='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>Hospital CIO Roadmap</title><style>body{font-family:Calibri,Arial,sans-serif;font-size:11pt;line-height:1.4}h2{font-family:Cambria,Georgia,serif;color:#5B0F16}h3{font-family:Cambria,Georgia,serif;color:#5B0F16;margin-top:14pt}</style></head><body>'+docHTML()+'</body></html>';
+  try{
+    var blob=new Blob(["\ufeff",html],{type:"application/msword"});
+    var url=URL.createObjectURL(blob), a=document.createElement("a");
+    a.href=url; a.download=fileName("doc"); document.body.appendChild(a); a.click();
+    setTimeout(function(){ URL.revokeObjectURL(url); a.remove(); },500);
+    toast("Downloaded "+fileName("doc")+". If nothing happened, use “Open module in a new tab” and try again.");
+  }catch(e){ toast("Download was blocked here. Open the module in a new tab, or use Copy as text."); }
+});
+document.getElementById("printBtn").addEventListener("click",function(){ window.print(); });
+document.getElementById("copyBtn").addEventListener("click",function(){
+  var t=docText();
+  function fallback(){ var ta=document.createElement("textarea"); ta.value=t; document.body.appendChild(ta); ta.select(); try{document.execCommand("copy"); toast("Copied. Paste it into the Canvas text entry box.");}catch(e){toast("Copy was blocked. Select the preview text and copy it manually.");} ta.remove(); }
+  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(function(){toast("Copied. Paste it into the Canvas text entry box.");},fallback); } else fallback();
+});
+document.getElementById("openTab").href=window.location.href.split("#")[0];
+document.getElementById("resetBtn").addEventListener("click",function(){
+  if(!confirm("Clear all of your assignment answers in this browser? Knowledge check results are kept.")) return;
+  state.a={}; state.built=false; save(); form.reset(); restoreForm(); updateDerived();
+  document.getElementById("preview").classList.remove("show"); document.getElementById("exportBar").style.display="none"; document.getElementById("missing").style.display="none";
+  buildNav(); toast("Assignment answers cleared.");
+});
+
+var tt;
+function toast(msg){ var t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(tt); tt=setTimeout(function(){t.classList.remove("show");},4200); }
+
+/* ---------- init ---------- */
+restoreForm(); updateDerived();
+show(Math.min(state.page||0,pages.length-1));
+})();
+</script>
+<script>
+(function(){
+"use strict";
+function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;var t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function gauss(r){var u=1-r(),v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+function clamp(x,a,b){return Math.max(a,Math.min(b,x));}
+function $(id){return document.getElementById(id);}
+var nf=new Intl.NumberFormat("en-US"), usd=new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",maximumFractionDigits:0});
+var reduceMotion=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+var SVGNS="http://www.w3.org/2000/svg";
+function shell(id,title,intro,body){var el=$(id); if(!el) return null; el.innerHTML='<div class="tryit-head"><h3>Try it: '+title+'</h3><p>'+intro+'</p></div><div class="tryit-body">'+body+'</div>'; return el;}
+function kpi(label,val,cls){return '<div class="'+(cls||"")+'"><strong>'+val+'</strong><span>'+label+'</span></div>';}
+
+/* ===== Lesson 1: early-alert threshold ===== */
+(function(){
+  var r=rng(11), S=[];
+  for(var i=0;i<200;i++){ var risk=i<30; S.push({risk:risk,score:clamp(risk?0.64+gauss(r)*0.15:0.32+gauss(r)*0.15,0.02,0.98),y:22+r()*96}); }
+  var el=shell("lab-alert","Who gets flagged?","An early-alert model gives 200 first-year students a risk score. Thirty of them (filled dots) will actually leave before spring. Move the threshold and watch what happens to the advisors who have to act on the flags.",
+   '<svg viewBox="0 0 600 140" role="img" aria-label="Students plotted by risk score with a threshold line" id="ea_svg"></svg>'+
+   '<div class="legend"><span><i style="background:var(--maroon)"></i>Will leave (at risk)</span><span><i style="border:2px solid var(--stone)"></i>Will persist</span><span><i style="background:#F1E6C4;border-radius:0"></i>Flagged zone</span></div>'+
+   '<div class="ctrl"><label for="ea_t">Flag at risk score ≥ <span id="ea_tv"></span></label><input type="range" id="ea_t" min="10" max="90" value="50"></div>'+
+   '<div class="kpis" id="ea_k" aria-live="polite"></div><div class="insight" id="ea_i"></div>');
+  if(!el) return;
+  var svg=$("ea_svg"), h='<rect id="ea_zone" x="0" y="10" height="120" fill="#F1E6C4"/>';
+  for(var x=0;x<=10;x++){ h+='<text x="'+(20+x*56)+'" y="136" font-size="9" fill="#5E5A57" text-anchor="middle">'+(x/10).toFixed(1)+'</text>'; }
+  S.forEach(function(s){ var cx=20+s.score*560; h+= s.risk?'<circle cx="'+cx+'" cy="'+s.y+'" r="4.5" fill="#5B0F16"/>':'<circle cx="'+cx+'" cy="'+s.y+'" r="4" fill="none" stroke="#AAABAF" stroke-width="1.5"/>'; });
+  h+='<line id="ea_line" y1="10" y2="126" stroke="#C6A44A" stroke-width="3"/>';
+  svg.innerHTML=h;
+  function upd(){
+    var t=$("ea_t").value/100, X=20+t*560;
+    $("ea_tv").textContent=t.toFixed(2);
+    $("ea_line").setAttribute("x1",X);$("ea_line").setAttribute("x2",X);
+    $("ea_zone").setAttribute("x",X);$("ea_zone").setAttribute("width",600-X);
+    var fl=0,tp=0,fp=0; S.forEach(function(s){ if(s.score>=t){fl++; if(s.risk)tp++; else fp++;} });
+    var miss=30-tp, hrs=Math.round(fl*0.75);
+    $("ea_k").innerHTML=kpi("students flagged",fl)+kpi("at-risk students caught",tp+" of 30",tp>=24?"good":"")+kpi("false alarms",fp,fp>40?"bad":"")+kpi("at-risk students missed",miss,miss>10?"bad":"")+kpi("advisor hours (45 min each)",hrs);
+    var msg;
+    if(t<0.4) msg="You're catching nearly everyone at risk, but most flags are false alarms. With "+hrs+" hours of outreach, advisors will start ignoring flags, which is how alert fatigue starts.";
+    else if(t>0.7) msg="Advisors have a light load, but "+miss+" students who will leave never get a call. A quiet dashboard isn't the same as a working one.";
+    else msg="This is the trade-off zone. There's no threshold with zero misses and zero false alarms, so someone has to choose, and that choice is a policy decision about who gets help, not a technical setting.";
+    $("ea_i").textContent=msg+" Ask the slide's question: who acts on the flag, and is it fair?";
+  }
+  $("ea_t").addEventListener("input",upd); upd();
+})();
+
+/* ===== Lesson 2: approval chain ===== */
+(function(){
+  var steps=[["Requester submits the purchase request",0.5,1],["Department chair approves",2,1],["Department admin re-checks the form for typos",1.5,0],["Budget office confirms funds",2,1],["AVP signs a second budget check",2,0],["Procurement places the order",1.5,1],["VP signs for awareness only",3,0]];
+  var keep=steps.map(function(){return true;});
+  var el=shell("lab-chain","Fix it, then automate it","This purchase request needs seven sign-offs and takes almost two weeks. Uncheck the steps you'd eliminate, then compare automating the process as-is with automating your redesign. Automated routing cuts each step's waiting time by about 70%.",
+   '<ul class="steplist" id="pc_list"></ul><div class="ctrl"><button class="btn ghost" type="button" id="pc_reveal">Show which steps add real review</button><button class="btn ghost" type="button" id="pc_reset">Reset</button></div>'+
+   '<div class="kpis" id="pc_k" aria-live="polite"></div><div class="insight" id="pc_i"></div>');
+  if(!el) return;
+  var ul=$("pc_list");
+  ul.innerHTML=steps.map(function(s,i){return '<li data-i="'+i+'"><input type="checkbox" checked id="pc'+i+'" aria-label="Keep step: '+s[0]+'"><label class="nm" for="pc'+i+'">'+s[0]+'</label><span class="d">'+s[1]+' days</span><span class="tag '+(s[2]?'v':'n')+'">'+(s[2]?'Adds review':'No real review')+'</span></li>';}).join("");
+  function auto(d){return Math.max(0.2,d*0.3);}
+  function upd(){
+    var today=0,asis=0,redo=0,removedVal=[],keptWaste=0;
+    steps.forEach(function(s,i){ today+=s[1]; asis+=auto(s[1]); if(keep[i]){redo+=auto(s[1]); if(!s[2])keptWaste++;} else if(s[2]) removedVal.push(s[0].toLowerCase()); ul.children[i].classList.toggle("off",!keep[i]); });
+    $("pc_k").innerHTML=kpi("today, all manual",today.toFixed(1)+" days")+kpi("automate as-is",asis.toFixed(1)+" days")+kpi("your redesign, automated",redo.toFixed(1)+" days",removedVal.length?"bad":"good")+kpi("pointless steps still running",keptWaste,keptWaste?"bad":"good");
+    var m;
+    if(removedVal.length) m="Careful: you removed a step that provides real control ("+removedVal.join("; ")+"). Faster isn't better if nobody checks that the money exists or that the purchase makes sense.";
+    else if(keptWaste===3) m="Automating as-is makes the process faster, but every pointless signature is still there, now running at machine speed. Try removing the steps that add no review.";
+    else if(keptWaste>0) m="Getting closer. "+keptWaste+" step"+(keptWaste>1?"s that add":" that adds")+" no real review "+(keptWaste>1?"are":"is")+" still in the chain.";
+    else m="That's the redesign. You kept every real control, removed the rubber stamps, and then automated what was left. That's what fix the process before you automate it means in practice.";
+    $("pc_i").textContent=m;
+  }
+  ul.addEventListener("change",function(e){var li=e.target.closest("li"); keep[+li.getAttribute("data-i")]=e.target.checked; upd();});
+  $("pc_reveal").addEventListener("click",function(){ul.classList.add("revealed");});
+  $("pc_reset").addEventListener("click",function(){keep=keep.map(function(){return true;}); ul.querySelectorAll("input").forEach(function(c){c.checked=true;}); ul.classList.remove("revealed"); upd();});
+  upd();
+})();
+
+/* ===== Lesson 3: maturity ladder inventory simulation ===== */
+(function(){
+  var N=60,LEAD=2,SAFE=10,r=rng(7),dem=[],ly=[];
+  for(var t=0;t<N;t++){var sp=(t>=22&&t<38)?18:0, lsp=(t>=29&&t<45)?18:0; dem.push(Math.max(0,Math.round(20+sp+(r()-0.5)*10))); ly.push(20+lsp);}
+  function sim(level){
+    var stock=100,pipe=[],out=0,outDays=[],hold=0,ser=[];
+    for(var t=0;t<N;t++){
+      pipe=pipe.filter(function(o){if(o.t===t){stock+=o.q;return false;}return true;});
+      var d=dem[t]; if(d>stock){out+=d-stock;outDays.push(t);stock=0;} else stock-=d;
+      var onord=pipe.reduce(function(a,o){return a+o.q;},0),q=0;
+      if(level===1){ if(stock+onord<45) q=100; }
+      else { var R=level===2?4:1; if(t%R===0){ var f=0,k;
+        if(level===2){ for(k=1;k<=LEAD+R;k++) f+=ly[Math.min(t+k,N-1)]; }
+        else { var a=0,b=0,j0=Math.max(0,t-2); for(var j=j0;j<=t;j++){a+=dem[j];b+=ly[j];} var recent=a/(t-j0+1); for(k=1;k<=LEAD+R;k++) f+=0.5*recent+0.5*ly[Math.min(t+k,N-1)]*(a/b); }
+        q=Math.max(0,Math.round(f+SAFE-(stock+onord))); } }
+      if(q>0) pipe.push({t:t+LEAD,q:q});
+      hold+=stock; ser.push(stock);
+    }
+    return {out:out,outDays:outDays,avg:Math.round(hold/N),ser:ser};
+  }
+  var R={1:sim(1),2:sim(2),3:sim(3)}, cur=1;
+  var names={1:"Level 1 · Reactive",2:"Level 2 · Predictive",3:"Level 3 · Adaptive"};
+  var how={1:"Reorders a fixed 100 boxes whenever stock drops below 45. It's a rule someone wrote, and it never learns.",2:"Every four days, orders what last year's flu-season curve says it will need. This year the season arrived a week early.",3:"Every day, blends last year's curve with what's actually happening this week, so it notices the early season and adjusts."};
+  var el=shell("lab-ladder","Climb the ladder with a supply room","A clinic uses about 20 boxes of exam gloves a day, until flu season nearly doubles demand. Deliveries take two days. Switch between maturity levels to see how each one handles the same 60 days.",
+   '<div class="seg" role="group" aria-label="Maturity level"><button type="button" data-l="1">Level 1 · Reactive</button><button type="button" data-l="2">Level 2 · Predictive</button><button type="button" data-l="3">Level 3 · Adaptive</button></div>'+
+   '<p id="iv_how" style="margin:10px 0 6px;font-size:.95rem"></p>'+
+   '<svg viewBox="0 0 600 220" role="img" aria-label="Daily demand and inventory on hand over 60 days" id="iv_svg"></svg>'+
+   '<div class="legend"><span><i style="background:#E3DCCF;border-radius:0"></i>Daily demand</span><span><i style="background:var(--maroon);border-radius:0;height:3px"></i>Boxes on the shelf</span><span><i style="background:var(--bad)"></i>Ran out</span></div>'+
+   '<table class="cmp" id="iv_t"><thead><tr><th>Level</th><th>Boxes short</th><th>Days out of stock</th><th>Average boxes on shelf</th></tr></thead><tbody></tbody></table>'+
+   '<div class="insight">Level 2 beats Level 1 on stockouts, but it trusted last year’s curve, so it ran short when the season started early and sat on extra stock when the season ended early. Level 3 adapts to what’s actually happening. Each level depends on the one below it: you can’t adapt a forecast you don’t have. Level 4 would place and approve orders with no one watching, which may be fine for gloves but not for patient care.</div>');
+  if(!el) return;
+  var W=600,H=220,pl=34,pr=8,pt=10,pb=24,maxY=150,bw=(W-pl-pr)/N;
+  function X(t){return pl+t*bw+bw/2;} function Y(v){return pt+(H-pt-pb)*(1-Math.min(v,maxY)/maxY);}
+  function draw(){
+    var res=R[cur],h='';
+    [0,50,100,150].forEach(function(v){h+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="#EEE9E1"/><text x="'+(pl-6)+'" y="'+(Y(v)+3)+'" font-size="9" text-anchor="end" fill="#5E5A57">'+v+'</text>';});
+    dem.forEach(function(d,t){h+='<rect x="'+(pl+t*bw+1)+'" y="'+Y(d)+'" width="'+(bw-2)+'" height="'+(Y(0)-Y(d))+'" fill="#E3DCCF"/>';});
+    h+='<rect x="'+X(22)+'" y="'+pt+'" width="'+(16*bw)+'" height="12" fill="#F1E6C4"/><text x="'+(X(22)+4)+'" y="'+(pt+9)+'" font-size="9" fill="#7A6220">Flu season this year</text>';
+    h+='<polyline fill="none" stroke="#5B0F16" stroke-width="2.5" points="'+res.ser.map(function(v,t){return X(t)+","+Y(v);}).join(" ")+'"/>';
+    res.outDays.forEach(function(t){h+='<circle cx="'+X(t)+'" cy="'+Y(0)+'" r="5" fill="#9B2226"/>';});
+    for(var d=0;d<=60;d+=10) h+='<text x="'+(pl+d*bw)+'" y="'+(H-8)+'" font-size="9" text-anchor="middle" fill="#5E5A57">Day '+d+'</text>';
+    $("iv_svg").innerHTML=h; $("iv_how").textContent=how[cur];
+    $("iv_t").querySelector("tbody").innerHTML=[1,2,3].map(function(l){var x=R[l];return '<tr class="'+(l===cur?'sel':'')+'"><td>'+names[l]+'</td><td>'+x.out+'</td><td>'+x.outDays.length+'</td><td>'+x.avg+'</td></tr>';}).join("");
+    el.querySelectorAll(".seg button").forEach(function(b){b.setAttribute("aria-pressed",+b.getAttribute("data-l")===cur?"true":"false");});
+  }
+  el.querySelector(".seg").addEventListener("click",function(e){var b=e.target.closest("button"); if(b){cur=+b.getAttribute("data-l"); draw();}});
+  draw();
+})();
+
+/* ===== Lesson 4: readiness ===== */
+(function(){
+  var dims=[["Technical","Clean, accessible data; infrastructure; MLOps"],["Organizational","Sponsor, steering committee, training"],["Governance","Policies, bias audits, privacy review"]], v=[4,2,3];
+  var fix={0:"Invest in the data foundation: integrate sources, assign data owners, and fix quality before adding models.",1:"Find an executive sponsor, stand up a steering committee, and fund training. Tools without adoption sit unused.",2:"Write the AI use policy, set up vendor and privacy review, and name owners for each system before anything scales."};
+  var el=shell("lab-ready","Find the bottleneck","Rate an organization's readiness on each success factor from 1 to 5. The dashed line shows how far it can actually go: readiness is limited by the weakest factor.",
+   '<div id="rd_s"></div><div class="rbars" id="rd_b" aria-hidden="true"><div class="rb"></div><div class="rb"></div><div class="rb"></div><div class="waterline"><span></span></div></div><div class="rlabels"><span>Technical</span><span>Organizational</span><span>Governance</span></div><div class="insight" id="rd_i" aria-live="polite"></div>');
+  if(!el) return;
+  $("rd_s").innerHTML=dims.map(function(d,i){return '<div class="ctrl"><label for="rd'+i+'" style="min-width:150px">'+d[0]+' <span class="hint" style="font-weight:400;display:block;font-size:.84rem;color:var(--muted)">'+d[1]+'</span></label><input type="range" min="1" max="5" value="'+v[i]+'" id="rd'+i+'" data-i="'+i+'"><strong id="rdv'+i+'">'+v[i]+'</strong></div>';}).join("");
+  function upd(){
+    var bars=$("rd_b").querySelectorAll(".rb"), mn=Math.min.apply(null,v), mx=Math.max.apply(null,v), wi=v.indexOf(mn);
+    bars.forEach(function(b,i){b.style.height=(v[i]*20)+"%"; b.classList.toggle("weak",v[i]===mn&&mx!==mn); $("rdv"+i).textContent=v[i];});
+    var wl=$("rd_b").querySelector(".waterline"); wl.style.bottom=(mn*20)+"%"; wl.querySelector("span").textContent="Effective readiness: "+mn;
+    var m = mx===mn ? (mn>=4?"Balanced and strong. This organization is ready to move pilots into production.":"Balanced, which is good, but low. Build all three together; Phase 1 is the right place to be.")
+      : "The bottleneck is "+dims[wi][0].toLowerCase()+". Raising the other two won't help until this moves. "+fix[wi];
+    if(mx-mn>=3) m+=" A gap this large is a warning sign: strength in one area tempts leaders to scale before the organization can absorb it.";
+    $("rd_i").textContent=m;
+  }
+  $("rd_s").addEventListener("input",function(e){if(e.target.dataset.i){v[+e.target.dataset.i]=+e.target.value; upd();}});
+  upd();
+})();
+
+/* ===== Lesson 5: bias audit ===== */
+(function(){
+  var r=rng(23), A=[],B=[],Bx=[],Ax=[];
+  for(var i=0;i<120;i++){ var za=gauss(r),zb=gauss(r); A.push(70+za*9); B.push(63+zb*9); Ax.push(69.5+za*9); Bx.push(68.5+zb*9); }
+  var el=shell("lab-bias","Run a bias audit","A resume-screening model scores 240 applicants for a staff role: 120 in Group A and 120 in Group B. Anyone at or above the cutoff gets an interview. Check whether the result passes the four-fifths rule, a federal rule of thumb that flags a selection rate for one group below 80% of the highest group's rate.",
+   '<div class="ctrl"><label for="ba_c">Interview cutoff score: <span id="ba_cv"></span></label><input type="range" id="ba_c" min="50" max="85" value="72"></div>'+
+   '<div class="ctrl"><label style="font-weight:400"><input type="checkbox" id="ba_f" style="accent-color:var(--maroon)"> Remove the "employment gap" feature from the model</label></div>'+
+   '<div class="hbar"><span>Group A</span><div class="track"><div class="fill" id="ba_a"></div></div><strong id="ba_av"></strong></div>'+
+   '<div class="hbar"><span>Group B</span><div class="track"><div class="fill b" id="ba_b"></div></div><strong id="ba_bv"></strong></div>'+
+   '<div class="kpis" id="ba_k" aria-live="polite"></div><div class="insight" id="ba_i"></div>');
+  if(!el) return;
+  function rate(arr,c){return arr.filter(function(x){return x>=c;}).length/arr.length;}
+  function upd(){
+    var c=+$("ba_c").value, f=$("ba_f").checked, a=rate(f?Ax:A,c), b=rate(f?Bx:B,c), hi=Math.max(a,b), lo=Math.min(a,b), ratio=hi?lo/hi:1, pass=ratio>=0.8;
+    $("ba_cv").textContent=c;
+    $("ba_a").style.width=(a*100)+"%"; $("ba_b").style.width=(b*100)+"%";
+    $("ba_av").textContent=Math.round(a*100)+"%"; $("ba_bv").textContent=Math.round(b*100)+"%";
+    $("ba_k").innerHTML=kpi("interviews offered",Math.round((a+b)*120))+kpi("impact ratio (lower ÷ higher)",ratio.toFixed(2),pass?"good":"bad")+kpi("four-fifths rule",pass?"Passes":"Flags",pass?"good":"bad");
+    $("ba_i").textContent = f
+      ? (pass?"Removing the employment-gap feature closed most of the gap. Gaps often reflect caregiving, illness, or military service, so the feature was acting as a proxy for group membership. Keep auditing anyway: other proxies can hide in the data.":"Even without the proxy, a very selective cutoff can still create disparity. Auditing has to be repeated whenever the cutoff or the model changes.")
+      : (pass?"This cutoff passes for now, but the model still penalizes employment gaps. Try a stricter cutoff and watch the ratio fall.":"Group B is selected at well under 80% of Group A's rate. Nobody wrote a biased rule; the model learned it from a feature. Try removing the employment-gap feature.");
+  }
+  $("ba_c").addEventListener("input",upd); $("ba_f").addEventListener("change",upd); upd();
+})();
+
+/* ===== Lesson 6: ORION route optimizer ===== */
+(function(){
+  var W=520,H=340,MPU=0.03,r=rng(42),stops=[],depot={x:36,y:304};
+  while(stops.length<11){ var p={x:70+r()*420,y:30+r()*250}, ok=stops.every(function(s){return Math.hypot(s.x-p.x,s.y-p.y)>55;}); if(ok&&Math.hypot(p.x-depot.x,p.y-depot.y)>70) stops.push(p); }
+  var habit=stops.map(function(_,i){return i;}).sort(function(a,b){return stops[a].y-stops[b].y;});
+  var labels={}; habit.forEach(function(si,k){labels[si]=k+1;});
+  var route=habit.slice(), mode="habit", penal=false, playing=null, building=[];
+  function pt(i){return i<0?depot:stops[i];}
+  function full(rt){return [-1].concat(rt,[-1]);}
+  function miles(rt){var f=full(rt),d=0;for(var i=1;i<f.length;i++){var a=pt(f[i-1]),b=pt(f[i]);d+=Math.hypot(a.x-b.x,a.y-b.y);}return d*MPU;}
+  function lefts(rt){var f=full(rt),n=0;for(var i=1;i<f.length-1;i++){var a=pt(f[i-1]),b=pt(f[i]),c=pt(f[i+1]),ux=b.x-a.x,uy=b.y-a.y,vx=c.x-b.x,vy=c.y-b.y,cr=ux*vy-uy*vx,m=Math.hypot(ux,uy)*Math.hypot(vx,vy);if(m&&cr/m<-0.5)n++;}return n;}
+  function cost(rt){return miles(rt)+(penal?lefts(rt)*0.4:0);}
+  var habitMiles=miles(habit);
+  function nearest(){var left=stops.map(function(_,i){return i;}),cur=depot,out=[];while(left.length){left.sort(function(a,b){return Math.hypot(stops[a].x-cur.x,stops[a].y-cur.y)-Math.hypot(stops[b].x-cur.x,stops[b].y-cur.y);});var n=left.shift();out.push(n);cur=stops[n];}return out;}
+  function twoOptSteps(start){var rt=start.slice(),steps=[],improved=true,guard=0;while(improved&&guard++<200){improved=false;var best=cost(rt);for(var i=0;i<rt.length-1&&!improved;i++)for(var j=i+1;j<rt.length&&!improved;j++){var c=rt.slice(0,i).concat(rt.slice(i,j+1).reverse(),rt.slice(j+1));if(cost(c)<best-1e-9){rt=c;steps.push(rt.slice());improved=true;}}}return steps;}
+
+  var el=shell("lab-orion","Optimize a delivery route like ORION","A driver leaves the hub (square) to deliver 11 packages and return. The starting route follows address order, the way a driver might work a list. Draw your own route, then let the algorithm optimize it and watch each improvement. ORION also weighs left turns, which mean waiting on oncoming traffic; switch that on to see how it changes the answer.",
+   '<div class="seg" role="group" aria-label="Route method"><button type="button" data-m="habit">Address-order route</button><button type="button" data-m="draw">Draw your own</button><button type="button" data-m="nn">Nearest stop next</button><button type="button" data-m="opt">Optimize (2-opt)</button></div>'+
+   '<div class="ctrl"><label style="font-weight:400"><input type="checkbox" id="or_lt" style="accent-color:var(--maroon)"> Penalize left turns while optimizing</label><span id="or_hint" style="font-size:.92rem;color:var(--muted)"></span></div>'+
+   '<svg viewBox="0 0 '+W+' '+H+'" id="or_svg" role="img" aria-label="Delivery map with route"></svg>'+
+   '<div class="kpis" id="or_k" aria-live="polite"></div><div class="insight" id="or_i"></div>'+
+   '<h4 style="margin-top:18px">Now scale it up</h4><p style="font-size:.95rem;margin-bottom:6px">One route is a small number. ORION’s value came from multiplying a small daily saving across tens of thousands of routes. UPS has said that cutting just one mile per driver per day is worth up to $50 million a year. Your toy route saves far more than a real one would, because real drivers’ routes were already fairly efficient; ORION’s actual gains were a few miles per route. Start with one mile, then try your own number.</p>'+
+   '<div class="ctrl"><label for="or_m">Miles saved per route per day</label><input type="number" id="or_m" value="1" min="0" step="0.1"><button class="btn ghost" type="button" id="or_use" style="padding:6px 12px">Use my route’s savings</button></div>'+
+   '<div class="row3"><div class="field"><label for="or_r">Routes per day</label><input type="number" id="or_r" value="55000" min="1"></div><div class="field"><label for="or_d">Delivery days per year</label><input type="number" id="or_d" value="250" min="1"></div><div class="field"><label for="or_c">Cost per mile ($)</label><input type="number" id="or_c" value="2.50" min="0" step="0.1"></div></div>'+
+   '<div class="kpis" id="or_s"></div>');
+  if(!el) return;
+  var svg=$("or_svg");
+  function draw(){
+    var h='<defs><marker id="arw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0L10,5L0,10z" fill="#5B0F16"/></marker></defs>';
+    for(var gx=0;gx<=W;gx+=40) h+='<line x1="'+gx+'" y1="0" x2="'+gx+'" y2="'+H+'" stroke="#EFEBE4"/>';
+    for(var gy=0;gy<=H;gy+=40) h+='<line x1="0" y1="'+gy+'" x2="'+W+'" y2="'+gy+'" stroke="#EFEBE4"/>';
+    var path = mode==="draw" ? [-1].concat(building, building.length===stops.length?[-1]:[]) : full(route);
+    for(var i=1;i<path.length;i++){var a=pt(path[i-1]),b=pt(path[i]),dx=b.x-a.x,dy=b.y-a.y,L=Math.hypot(dx,dy),sh=13/L;
+      h+='<line x1="'+a.x+'" y1="'+a.y+'" x2="'+(b.x-dx*sh)+'" y2="'+(b.y-dy*sh)+'" stroke="#5B0F16" stroke-width="2.5" marker-end="url(#arw)"/>';}
+    h+='<rect x="'+(depot.x-11)+'" y="'+(depot.y-11)+'" width="22" height="22" fill="#C6A44A" stroke="#3B080D" stroke-width="2"/><text x="'+depot.x+'" y="'+(depot.y+28)+'" font-size="11" text-anchor="middle" fill="#3B080D" font-weight="700">Hub</text>';
+    stops.forEach(function(s,i){var used=mode==="draw"&&building.indexOf(i)>-1;
+      h+='<g class="stop" data-s="'+i+'" tabindex="'+(mode==="draw"?0:-1)+'" role="button" aria-label="Stop '+labels[i]+'"><circle cx="'+s.x+'" cy="'+s.y+'" r="11" fill="'+(used?"#5B0F16":"#fff")+'" stroke="#5B0F16" stroke-width="2"/><text x="'+s.x+'" y="'+(s.y+4)+'" font-size="11" text-anchor="middle" font-weight="700" fill="'+(used?"#fff":"#5B0F16")+'" pointer-events="none">'+labels[i]+'</text></g>';});
+    svg.innerHTML=h;
+    el.querySelectorAll(".seg button").forEach(function(b){b.setAttribute("aria-pressed",b.dataset.m===mode?"true":"false"); b.disabled=!!playing;});
+    stats();
+  }
+  function stats(){
+    var complete = mode!=="draw" || building.length===stops.length, rt = mode==="draw"?building:route;
+    $("or_hint").textContent = mode==="draw" ? (complete?"Route complete. Try Optimize to improve it.":"Click or tab to the stops in the order you'd drive them ("+building.length+" of "+stops.length+").") : "";
+    if(!complete){ $("or_k").innerHTML=kpi("stops placed",building.length+" of 11"); $("or_i").textContent="Plan the route you think is shortest. Most people get close, but rarely all the way."; scale(0); return; }
+    var m=miles(rt), lt=lefts(rt), sv=habitMiles-m, pct=sv/habitMiles*100;
+    $("or_k").innerHTML=kpi("route miles",m.toFixed(1))+kpi("left turns",lt)+kpi("miles saved vs. address order",sv.toFixed(1)+" ("+Math.round(pct)+"%)",sv>0.05?"good":"");
+    var msg={habit:"Address order feels logical on paper, but it zigzags across the map. This is the baseline ORION had to beat: routes drivers built from experience.",
+      draw:"Compare your route with the algorithm's. People are good at spotting obvious loops but miss combinations that only show up when you test them systematically.",
+      nn:"Nearest-stop-next is a greedy heuristic: always go to the closest unvisited stop. It's fast and usually decent, but it can strand you far from the hub at the end.",
+      opt:penal?"With the left-turn penalty, the optimizer accepts a slightly longer route if it avoids turns across traffic. That's a prescriptive model encoding a business rule: idle time and accident risk cost money too.":"2-opt repeatedly takes two legs of the route and uncrosses them, keeping any change that shortens the trip, until no swap helps. ORION's real model handles far more stops, time windows, and rules, but the principle is the same."}[mode];
+    $("or_i").textContent=msg; scale(Math.max(0,sv));
+  }
+  var lastSv=0;
+  function scale(sv){
+    lastSv=sv; $("or_use").textContent="Use my route’s savings ("+sv.toFixed(1)+" mi)";
+    var M=+$("or_m").value||0,R=+$("or_r").value||0,D=+$("or_d").value||0,C=+$("or_c").value||0, yr=M*R*D;
+    $("or_s").innerHTML=kpi("miles saved per year",nf.format(Math.round(yr)))+kpi("annual savings",usd.format(yr*C),yr>0?"good":"");
+  }
+  function play(steps){
+    if(!steps.length){draw(); $("or_i").textContent="Already optimal for this method: no swap makes the route any shorter."; return;}
+    if(reduceMotion){route=steps[steps.length-1];draw();return;}
+    var k=0; playing=setInterval(function(){route=steps[k++]; if(k>=steps.length){clearInterval(playing);playing=null;} draw();},320); draw();
+  }
+  el.querySelector(".seg").addEventListener("click",function(e){var b=e.target.closest("button"); if(!b||playing) return; var m=b.dataset.m;
+    if(m==="habit"){mode="habit";route=habit.slice();draw();}
+    else if(m==="draw"){mode="draw";building=[];draw();}
+    else if(m==="nn"){mode="nn";route=nearest();draw();}
+    else if(m==="opt"){var start=(mode==="draw"&&building.length===stops.length)?building.slice():route.slice(); mode="opt"; route=start; play(twoOptSteps(start));}
+  });
+  function pick(t){var g=t.closest(".stop"); if(!g||mode!=="draw") return; var i=+g.dataset.s; if(building.indexOf(i)<0){building.push(i);draw(); var nx=svg.querySelector('.stop[data-s="'+i+'"]'); if(nx) nx.focus();}}
+  svg.addEventListener("click",function(e){pick(e.target);});
+  svg.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();pick(e.target);}});
+  $("or_lt").addEventListener("change",function(e){penal=e.target.checked; if(mode==="opt"&&!playing){play(twoOptSteps(route));} else stats();});
+  ["or_m","or_r","or_d","or_c"].forEach(function(id){$(id).addEventListener("input",function(){scale(lastSv);});});
+  $("or_use").addEventListener("click",function(){$("or_m").value=lastSv.toFixed(1); scale(lastSv);});
+  draw();
+})();
+
+/* ===== Lesson 7: vendor triage ===== */
+(function(){
+  var Q=[
+   ["1. What data do you collect, and is it used to train your models?",["Student submissions are used to improve our models","Used for training only if the university opts in","Never used for training; prohibited in the contract"]],
+   ["2. Where is it stored, and who can access it?",["We'd rather not disclose our AI subprocessors","Sent to a named third-party AI provider under our data agreement","Stored in our U.S. cloud; access is limited and logged"]],
+   ["3. Can we turn the feature off or limit it?",["No, it's part of the platform","An admin can turn it off campus-wide","Off by default; instructors can enable it per course"]],
+   ["4. How do we know when it's wrong, and then what?",["We don't have a reporting process","Instructors can flag bad feedback for vendor review","Instructors approve feedback before students see it, and flags are reviewed"]]];
+  var el=shell("lab-vendor","Review an AI feature at renewal","Your LMS vendor's renewal includes a new AI feature that drafts feedback on student work. Pick the answer the vendor gives to each of the four questions and see what decision the governance process should reach.",
+   Q.map(function(q,i){return '<div class="vq"><label for="vd'+i+'">'+q[0]+'</label><select id="vd'+i+'" data-i="'+i+'"><option value="">Choose the vendor\'s answer…</option>'+q[1].map(function(o,j){return '<option value="'+j+'">'+o+'</option>';}).join("")+'</select></div>';}).join("")+
+   '<div id="vd_out" aria-live="polite"></div>');
+  if(!el) return;
+  function upd(){
+    var a=Q.map(function(_,i){var v=$("vd"+i).value;return v===""?null:+v;}), out=$("vd_out");
+    if(a.some(function(x){return x===null;})){out.innerHTML='<div class="insight">Answer all four to see the recommendation.</div>';return;}
+    var why=[],cls,verdict;
+    if(a[0]===0) why.push("Student work would train the vendor's models. Submissions are FERPA-protected education records; that's a hard stop.");
+    if(a[1]===0) why.push("The vendor won't say who processes the data. You can't classify data you can't trace.");
+    if(a[2]===0) why.push("No way to turn it off means faculty lose control of their course AI policy.");
+    if(a[3]===0) why.push("No error process means no accountability when feedback is wrong.");
+    var score=a.reduce(function(s,x){return s+x;},0);
+    if(why.length){cls="no";verdict="Don't enable yet. Negotiate or decline.";}
+    else if(score>=7){cls="ok";verdict="Approve, with a named owner and a review at next renewal.";why.push("Strong answers on training, storage, control, and error handling. Add it to the approved-tools list and tell faculty how to use it.");}
+    else{cls="mid";verdict="Approve for a limited pilot.";why.push("Acceptable, but not airtight. Start with a few volunteer courses, keep it off by default, and write the contract terms you still need before expanding.");}
+    out.innerHTML='<div class="verdict '+cls+'">'+verdict+'</div><ul style="margin-top:8px">'+why.map(function(w){return '<li>'+w+'</li>';}).join("")+'</ul>';
+  }
+  el.addEventListener("change",function(e){if(e.target.dataset.i!=null) upd();}); upd();
+})();
+
+})();
+</script>
+</body>
+</html>
